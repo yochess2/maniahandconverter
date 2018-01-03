@@ -8,7 +8,7 @@ class PrivateUnconvertedStorage(S3Boto3Storage):
     custom_domain = False
 
 class PrivateJsonStorage(S3Boto3Storage):
-    location = settings.AWS_PRIVATE_UNCONVERTED_LOCATION
+    location = settings.AWS_PRIVATE_JSON_LOCATION
     default_acl = 'private'
     file_overwrite = False
     custom_domain = False

@@ -5,8 +5,8 @@ from django.core.files import File
 
 from .forms import HHForm
 from .converters import create_hh_object, create_hh_details
-from .controllers import file_upload_post
-from .models import HH, HHJson
+from .controllers import create_hh
+from .models import HH
 
 def index(request):
     return render(
@@ -32,7 +32,8 @@ class FileUploadView(View):
 
         hh = hhForm.save(commit=False)
         hh_obj = create_hh_object(hh)
-        file_upload_post(hh, hh_obj)
+        create_hh(hh, hh_obj)
+        # create_json_file(hh, hh_obj)
 
         return JsonResponse({
             'is_valid':True,
