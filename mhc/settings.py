@@ -126,8 +126,8 @@ USE_TZ = True
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static_cdn')
 STATIC_URL = '/static/'
-MEDIA_URL = '/media/'
 # MEDIA_ROOT = os.path.join(BASE_DIR, 'media_cdn')
+MEDIA_URL = '/media/'
 
 # Simplified static file serving.
 # https://warehouse.python.org/project/whitenoise/
@@ -141,11 +141,11 @@ AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
-AWS_PRIVATE_UNCONVERTED_LOCATION = 'media/unconverted'
-AWS_PRIVATE_JSON_LOCATION = 'media/json'
-PRIVATE_FILE_STORAGE = 'mhc.storage_backends.PrivateMediaStorage'
+AWS_HH_LOCATION = 'media/unconverted'
+AWS_JSON_LOCATION = 'media/json'
+# PRIVATE_FILE_STORAGE = 'mhc.storage_backend.HhStorage'
+DEFAULT_FILE_STORAGE = 'mhc.storage_backend.JsonStorage'
 
-# Heroku: Update database configuration from $DATABASE_URL.
 import dj_database_url
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)

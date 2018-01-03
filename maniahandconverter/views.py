@@ -4,9 +4,9 @@ from django.http import JsonResponse, HttpResponse
 from django.core.files import File
 
 from .forms import HHForm
-from .converters import create_hh_object, create_hh_details
-from .controllers import create_hh
-from .models import HH
+from .converters import create_hh_object, create_hh_details, parse_hh_json
+from .controllers import create_hh, create_json_file
+from .models import HH, HHJson
 
 def index(request):
     return render(
@@ -33,7 +33,7 @@ class FileUploadView(View):
         hh = hhForm.save(commit=False)
         hh_obj = create_hh_object(hh)
         create_hh(hh, hh_obj)
-        # create_json_file(hh, hh_obj)
+        create_json_file(hh, hh_obj)
 
         return JsonResponse({
             'is_valid':True,
@@ -60,7 +60,7 @@ def get_hh(request, **kwargs):
     return HttpResponse(hh.file.read(), content_type='text/plain')
 
 def get_hh_obj(request, **kwargs):
-    hh = HH.objects.get(id=kwargs['pk'])
-    hh_obj = create_hh_object(hh)
+    file = HHJson.objects.get(hh=kwargs['pk']).file
+    hh_obj = parse_hh_json(file)
     text = create_hh_details(hh_obj)
     return HttpResponse(text, content_type='text/plain')

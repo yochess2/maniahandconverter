@@ -24,3 +24,8 @@ def create_hh_details(hh_obj):
         convertable_hands.append(message)
 
     return '\n'.join(unconvertable_hands + convertable_hands)
+
+def parse_hh_json(file):
+    byte_text = file.read()
+    json_text = json.loads(byte_text)
+    return json_text

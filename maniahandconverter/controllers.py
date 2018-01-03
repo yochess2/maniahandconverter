@@ -1,5 +1,9 @@
+from django.conf import settings
 from django.core.files.storage import default_storage
-from .models import HH, Player, Game, HH_Player, HH_Player_Game, Hand, Hand_Player
+
+from .models import HH, Player, Game, HH_Player, HH_Player_Game, Hand, Hand_Player, HHJson
+
+import boto3
 import time, json
 #dict_keys(['players', 'games', 'unconvertable_hands', 'hands'])
 
@@ -37,46 +41,44 @@ def create_hh(hh, hh_obj):
             hh_player_game = HH_Player_Game(hh_player=hh_player,game=games[g],amount=amount,count=count,sit=sit)
             hh_player_game.save()
 
-    c = time.time()
+    c = time.time() #3
     print('first database time: ', c - b)
 
-    for h in hh_obj['hands']:
-        v = h['details']
-        hand = Hand(
-            game        = games[v['game']],
-            hand_number = v['hand_number'],
-            date_played = v['date'],
-            time_played = v['time'],
-            sb          = v['sb'],
-            bb          = v['bb'],
-            ante        = v['ante'],
-            table       = v['table'],
-            blind_type  = v['blind_type'],
-            rake        = v['rake'],
-            pot         = v['pot'],
-            sitting     = v['sitting'],
-            dealt       = v['dealt'],
-            body        = v['body'],
-        )
-        hand.save()
+    # for h in hh_obj['hands']:
+    #     v = h['details']
+    #     hand = Hand(
+    #         game        = games[v['game']],
+    #         hand_number = v['hand_number'],
+    #         date_played = v['date'],
+    #         time_played = v['time'],
+    #         sb          = v['sb'],
+    #         bb          = v['bb'],
+    #         ante        = v['ante'],
+    #         table       = v['table'],
+    #         blind_type  = v['blind_type'],
+    #         rake        = v['rake'],
+    #         pot         = v['pot'],
+    #         sitting     = v['sitting'],
+    #         dealt       = v['dealt'],
+    #         body        = v['body'],
+    #     )
+    #     hand.save()
 
-        for p in v['players']:
-            hh_player = Hand_Player(
-                hand    = hand,
-                player  = players[p],
-                amount  = v['players'][p]['result'],
-                sitting = v['players'][p]['is_sitting']
-            )
-            hh_player.save()
+    #     for p in v['players']:
+    #         hh_player = Hand_Player(
+    #             hand    = hand,
+    #             player  = players[p],
+    #             amount  = v['players'][p]['result'],
+    #             sitting = v['players'][p]['is_sitting']
+    #         )
+    #         hh_player.save()
 
-    d = time.time()
-    print('next database time:', d - c)
+    # d = time.time()
+    # print('next database time:', d - c)
 
 def create_json_file(hh, hh_obj):
-    json_file = default_storage.open(hh.file.name, 'w')
-
-    file_text = json.dumps(hh_obj)
-    json_file.write(file_text)
-
-    hh_json = HHJson(hh=hh, file=json_file)
+    file = default_storage.open(hh.file.name, 'w')
+    json_text = json.dumps(hh_obj)
+    file.write(json_text)
+    hh_json = HHJson(hh=hh, file=file)
     hh_json.save()

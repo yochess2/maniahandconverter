@@ -1,8 +1,8 @@
 from django.db import models
-from mhc.storage_backend import PrivateUnconvertedStorage, PrivateJsonStorage
+from mhc.storage_backend import HhStorage, JsonStorage
 
 class HH(models.Model):
-    file = models.FileField(storage=PrivateUnconvertedStorage())
+    file = models.FileField(storage=HhStorage())
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -13,7 +13,7 @@ class HH(models.Model):
 
 class HHJson(models.Model):
     hh          = models.ForeignKey('HH', null=True, on_delete=models.SET_NULL)
-    file        = models.FileField(storage=PrivateJsonStorage())
+    file        = models.FileField(storage=JsonStorage())
 
 class Player(models.Model):
     name        = models.CharField(max_length=63)
