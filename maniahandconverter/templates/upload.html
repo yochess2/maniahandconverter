@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}<title>Upload HHs</title>{% endblock %}
+
+{% block javascript %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.19.2/js/vendor/jquery.ui.widget.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.19.2/js/jquery.iframe-transport.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.19.2/js/jquery.fileupload.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.19.2/js/jquery.fileupload-process.min.js"></script>
+  {% load static %}
+  <script src="{% static 'js/upload.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'css/fileupload.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>Upload HHs</h2>
+<!--
+/*
+ * jQuery File Upload Plugin Demo
+ * https://github.com/blueimp/jQuery-File-Upload
+ *
+ * Copyright 2010, Sebastian Tschan
+ * https://blueimp.net
+ *
+ * Licensed under the MIT license:
+ * https://opensource.org/licenses/MIT
+ */
+-->
+
+<button type="button" class="btn btn-primary js-upload-hhs">
+  <span class="glyphicon glyphicon-cloud-upload"></span> Select HHs
+</button>
+
+  <input id="fileupload" type="file" name="file" multiple
+         data-url="{% url 'file-upload' %}" style="display: none;"
+         data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
+
+<div class="table selected-hhs-wrapper">
+  <h4>Selected Hand Histories</h4>
+  <div class="selected-hh">
+  </div>
+</div>
+
+
+<input id="hero-input" class="hero-input" type="hidden" value="something" name="hero" placeholder="Enter Hero">
+{% endblock %}

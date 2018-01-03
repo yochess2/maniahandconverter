@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}<title>History</title>{% endblock %}
+
+{% block content %}
+<h2>History</h2>
+
+<table id="gallery" class="table table-bordered">
+  <thead>
+    <tr>
+      <th scope="col">Upload Date</th>
+      <th scope="col">Original Hand History</th>
+      <th scope="col">
+        <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for hh in hh_list %}
+    <tr>
+      <td>{{ hh.uploaded_at }}</td>
+      <td><a href="{% url 'get-hh' hh.id %}" target="_blank">{{ hh.file.name }}</a></td>
+      <td>
+        <a href="{% url 'history-detail' hh.id %}">
+          <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+        </a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}<title>HH Details</title>{% endblock %}
+
+{% block javascript %}
+<meta name="csrf-token" content="{{csrf_token}}">
+{% load static %}
+<script src="{% static 'js/history_detail.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/history_detail.css' %}">
+{% endblock %}
+
+
+{% block content %}
+<h2>Details</h2>
+<p>Id: <span id="obj-id">{{hh.id}}</span></p>
+
+<div class="history-detail-original">
+  <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
+  <ul class="history-detail-list">
+    <li><a href="{% url 'get-hh' hh.id %}" target="_blank"><span>Original File</span></a></li>
+    <li><a href="{% url 'get-hh-obj' hh.id %}" target="_blank"><span>File Details</span></a></li>
+  </ul>
+</div>
+
+<div class="history-detail-converted">
+  <h4>Converted Files</h4>
+  <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
+  <ul class="history-detail-list converted-file-list">
+    <div class="create-form">
+      <form>
+        <select>
+          {% for hh_player in hh.hh_player_set.all %}
+          <option value="{{hh_player.player.name}}">{{hh_player.player.name}}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-primary btn-sm">
+          <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+        </button>
+      </form>
+      <div id="message"></div>
+    </div>
+  </ul>
+</div>
+
+<div class="history-detail-stats">
+  <h4>Statistics</h4>
+
+  <div class="container">
+      {% for hh_player in hh.hh_player_set.all %}
+      <div class="row head-row">
+        <div class="col-sm-3"><b>{{hh_player.player.name}}</b></div>
+        <div class="col-sm-1"><b>Hands</b></div>
+        <div class="col-sm-1"><b>Sitout</b></div>
+        <div class="col-sm-1"><b>Won ($)</b></div>
+      </div>
+      {% for hh_player_game in hh_player.hh_player_game_set.all %}
+      <div class="row body-row">
+        <div class="col-sm-3">{{hh_player_game.game.name}}</div>
+        <div class="col-sm-1">{{hh_player_game.count}}</div>
+        <div class="col-sm-1">{{hh_player_game.sit}}</div>
+        <div class="col-sm-3">{{hh_player_game.amount|floatformat:"2"}}</div>
+      </div>
+      {% endfor %}
+      {% endfor %}
+
+  </div>
+</div>
+{% endblock %}
