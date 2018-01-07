@@ -12,3 +12,9 @@ class JsonStorage(S3Boto3Storage):
     default_acl = 'private'
     file_overwrite = False
     custom_domain = False
+
+class ConvertedStorage(S3Boto3Storage):
+    location = settings.AWS_CONVERTED_LOCATION
+    default_acl = 'private'
+    file_overwrite = False
+    custom_domain = False

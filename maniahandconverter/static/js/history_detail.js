@@ -2,7 +2,7 @@ $(function() {
   var csrf_token = $('meta[name="csrf-token"]').attr('content');
   var $select = $('select');
   var $hhId = $('#hh-id');
-  var $list = $('.create-form');
+  var $list = $('.converted-file-list');
   var $message = $('#message')
   $('button').on('click', function(evt) {
     evt.preventDefault();
@@ -11,11 +11,11 @@ $(function() {
       url: window.location.origin + '/history/' + $hhId.html() + '/',
       data: {
         csrfmiddlewaretoken: csrf_token,
-        hero: $select.val()
+        hero_id: $select.val()
       },
       success: function(data) {
         if(data.is_valid === true) {
-          $list.prepend('<li><a href="'+ data.filename +'">'+ data.hero +'</li>')
+          $list.append('<li><a href="/new/'+ data.new_hh_id +'">'+ data.hero +'</li>')
           $message.html('');
         } else {
           $message.html('already exists');

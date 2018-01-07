@@ -16,12 +16,12 @@
     </tr>
   </thead>
   <tbody>
-    {% for hh in hh_list %}
+    {% for hhjson in hhjson_list %}
     <tr>
-      <td>{{ hh.uploaded_at }}</td>
-      <td><a href="{% url 'get-hh' hh.id %}" target="_blank">{{ hh.file.name }}</a></td>
+      <td>{{ hhjson.uploaded_at }}</td>
+      <td><a href="{% url 'get-hh' hhjson.hh.id %}" target="_blank">{{ hhjson.hh.file.name }}</a></td>
       <td>
-        <a href="{% url 'history-detail' hh.id %}">
+        <a href="{% url 'history-detail' hhjson.id %}">
           <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
         </a>
       </td>

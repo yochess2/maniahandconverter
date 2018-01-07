@@ -4,8 +4,8 @@ from django.http import JsonResponse, HttpResponse
 from django.core.files import File
 
 from .converters import create_hh_object, create_hh_details, parse_hh_json
-from .controllers import save_hh_models, save_hh_file, save_hh_obj, save_hh_models, post4
-from .models import HH
+from .controllers import save_hh_models, handle_hh_file, handle_hh_obj, handle_hh_models, post4, handle_new_hh
+from .models import HH, HHJson, HHNew, HHJson_Player
 
 import time, json
 
@@ -30,40 +30,33 @@ class FileUploadView(View):
         data = { 'is_valid': False }
 
         if files is not None:
-            save_hh_file(self, request, csrf, data)
+            handle_hh_file(self, request, csrf, data)
         elif hh_id is not None:
-            save_hh_obj(self, request, csrf, hh_id, data)
+            handle_hh_obj(self, request, csrf, hh_id, data)
         elif hh_json_id is not None:
-            save_hh_models(self, request, csrf, hh_json_id, data)
+            handle_hh_models(self, request, csrf, hh_json_id, data)
         elif hero is not None:
             post4(self, request, csrf, hero, data)
 
         return JsonResponse(data)
 
 class HistoryView(generic.ListView):
-    model = HH
+    model = HHJson
     paginate_by = 20
     template_name = 'history.html'
 
 class HistoryDetailView(generic.DetailView):
-    model = HH
+    model = HHJson
     template_name = 'history_detail.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(HistoryDetailView, self).get_context_data(**kwargs)
-        return context
 
     def post(self, reqeust, **kwargs):
         hero = self.request.POST.get('hero')
-        hh = HH.objects.get(id=kwargs['pk'])
-        hhjson = hh.hhjson_set.all()[0]
-        hh_obj = parse_hh_json(hhjson.file)
+        data = { 'is_valid': False}
+        hero_id = self.request.POST.get('hero_id')
+        hh_id = kwargs['pk']
 
-        # create_hh(hh_obj, hero)
-
-
-
-        return JsonResponse({'is_valid': True, 'hero': hero})
+        handle_new_hh(hero_id, hh_id, data)
+        return JsonResponse(data)
 
 def get_hh(request, **kwargs):
     hh = HH.objects.get(id=kwargs['pk'])
@@ -75,3 +68,7 @@ def get_hh_obj(request, **kwargs):
     hh_obj = parse_hh_json(hhjson.file)
     text = create_hh_details(hh_obj)
     return HttpResponse(text, content_type='text/plain')
+
+def get_new_hh(request, **kwargs):
+    new_hh = HHNew.objects.get(id=kwargs['pk'])
+    return HttpResponse(new_hh.file.read())

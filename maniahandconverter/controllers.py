@@ -2,14 +2,14 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 
 from .converters import create_hh_object, parse_hh_json
-from .models import HH, Player, Game, HH_Player, HH_Player_Game, Hand, Hand_Player, HHJson
+from .models import HH, Player, Game, HHJson_Player, HHJson_Player_Game, HHJson, HHNew
 from .forms import HHForm
 
 import boto3
 import time, json
-#dict_keys(['players', 'games', 'unconvertable_hands', 'hands'])
 
-def handle_hh_models(hh, hh_obj):
+def save_hh_models(hh_json, hh_obj):
+    hh = hh_json.hh
     games = {}
     players = {}
 
@@ -26,15 +26,15 @@ def handle_hh_models(hh, hh_obj):
             players[player.name] = player
 
     for p in players:
-        hh_player = HH_Player(hh=hh, player=players[p])
-        hh_player.save()
+        hh_json_player = HHJson_Player(hh_json=hh_json, player=players[p])
+        hh_json_player.save()
 
         for g in hh_obj['players'][p]['games']:
             amount = hh_obj['players'][p]['games'][g]['amount']
             count = hh_obj['players'][p]['games'][g]['count']
             sit = hh_obj['players'][p]['games'][g]['sit']
-            hh_player_game = HH_Player_Game(hh_player=hh_player,game=games[g],amount=amount,count=count,sit=sit)
-            hh_player_game.save()
+            hh_json_player_game = HHJson_Player_Game(hh_json_player=hh_json_player,game=games[g],amount=amount,count=count,sit=sit)
+            hh_json_player_game.save()
 
     # for h in hh_obj['hands']:
     #     v = h['details']
@@ -76,7 +76,7 @@ def save_json_file(hh, hh_obj):
     hh_json.save()
     return hh_json
 
-def save_hh_file(self, request, csrf, data):
+def handle_hh_file(self, request, csrf, data):
     hhForm = HHForm(self.request.POST, self.request.FILES)
     if hhForm.is_valid() == True:
         a = time.time()
@@ -87,7 +87,7 @@ def save_hh_file(self, request, csrf, data):
         data['hh_id'] = hh.id
         data['csrf'] = csrf
 
-def save_hh_obj(self, request, csrf, hh_id, data):
+def handle_hh_obj(self, request, csrf, hh_id, data):
     hh = HH.objects.get(id=hh_id)
     a = time.time()
     hh_obj = create_hh_object(hh)
@@ -100,11 +100,11 @@ def save_hh_obj(self, request, csrf, hh_id, data):
     data['csrf'] = csrf
     data['hh_json_id'] = hh_json.id
 
-def save_hh_models(self, request, csrf, hh_json_id, data):
+def handle_hh_models(self, request, csrf, hh_json_id, data):
     hh_json = HHJson.objects.get(id=hh_json_id)
     a = time.time()
     hh_obj = parse_hh_json(hh_json.file)
-    handle_hh_models(hh_json.hh, hh_obj)
+    save_hh_models(hh_json, hh_obj)
     b = time.time()
     print('post3: ', b - a)
     data['is_valid'] = True
@@ -114,3 +114,28 @@ def save_hh_models(self, request, csrf, hh_json_id, data):
 def post4(self, request, csrf, hero, data):
     data['is_valid'] = True
     data['hero'] = hero
+
+def handle_new_hh(hero_id, hh_id, data):
+    hh_json_player = HHJson_Player.objects.get(id=hero_id)
+    hh_json = hh_json_player.hh_json
+
+    if len(HHNew.objects.filter(hero=hh_json_player.player.name, hh_json=hh_json)) > 0:
+        data['is_valid'] = False
+    else:
+        hh_obj = parse_hh_json(hh_json.file)
+
+        file = default_storage.open(hh_json.hh.file.name, 'w')
+        file.write(hh_json_player.player.name)
+        new_hh = HHNew(hh_json=hh_json, file=file, hero=hh_json_player.player.name)
+        new_hh.save()
+        data['is_valid'] = True
+        data['hero'] = hh_json_player.player.name
+        data['new_hh_id'] = new_hh.id
+
+
+
+
+
+
+
+

@@ -12,15 +12,15 @@
 
 {% block content %}
 <h2>Details</h2>
-<span>File: <span>{{hh}}</span></span>
+<span>File: <span>{{hhjson.hh}}</span></span>
 <br>
-<span>Id: <span id="hh-id">{{hh.id}}</span></span>
+<span>Id: <span id="hh-id">{{hhjson.hh.id}}</span></span>
 
 <div class="history-detail-original">
   <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
   <ul class="history-detail-list">
-    <li><a href="{% url 'get-hh' hh.id %}" target="_blank"><span>Original File</span></a></li>
-    <li><a href="{% url 'get-hh-obj' hh.id %}" target="_blank"><span>File Details</span></a></li>
+    <li><a href="{% url 'get-hh' hhjson.hh.id %}" target="_blank"><span>Original File</span></a></li>
+    <li><a href="{% url 'get-hh-obj' hhjson.hh.id %}" target="_blank"><span>File Details</span></a></li>
   </ul>
 </div>
 
@@ -28,34 +28,38 @@
   <h4>Converted Files</h4>
   <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
   <ul class="history-detail-list converted-file-list">
-    <div class="create-form">
-      <form>
-        <select>
-          {% for hh_player in hh.hh_player_set.all %}
-          <option value="{{hh_player.player.name}}">{{hh_player.player.name}}</option>
-          {% endfor %}
-        </select>
-        <button class="btn btn-primary btn-sm">
-          <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-        </button>
-      </form>
-      <div id="message"></div>
+    {% for new_hh in hhjson.hhnew_set.all %}
+    <li>
+      <a href="{% url 'get-new-hh' new_hh.id %}" target="_blank">{{new_hh.hero}}</a>
+    </li>
+    {% endfor %}
     </div>
   </ul>
+  <div class="create-form">
+    <form>
+      <select>
+        {% for hh_player in hhjson.hhjson_player_set.all %}
+        <option value="{{hh_player.id}}">{{hh_player.player.name}}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-primary btn-sm">
+        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+      </button>
+    </form>
+    <div id="message"></div>
 </div>
 
 <div class="history-detail-stats">
   <h4>Statistics</h4>
-
   <div class="container">
-      {% for hh_player in hh.hh_player_set.all %}
+      {% for hh_player in hhjson.hhjson_player_set.all %}
       <div class="row head-row">
         <div class="col-sm-3"><b>{{hh_player.player.name}}</b></div>
         <div class="col-sm-1"><b>Hands</b></div>
         <div class="col-sm-1"><b>Sitout</b></div>
         <div class="col-sm-1"><b>Won ($)</b></div>
       </div>
-      {% for hh_player_game in hh_player.hh_player_game_set.all %}
+      {% for hh_player_game in hh_player.hhjson_player_game_set.all %}
       <div class="row body-row">
         <div class="col-sm-3">{{hh_player_game.game.name}}</div>
         <div class="col-sm-1">{{hh_player_game.count}}</div>

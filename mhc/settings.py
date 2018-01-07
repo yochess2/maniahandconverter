@@ -143,6 +143,7 @@ AWS_S3_OBJECT_PARAMETERS = {
 }
 AWS_HH_LOCATION = 'media/unconverted'
 AWS_JSON_LOCATION = 'media/json'
+AWS_CONVERTED_LOCATION = 'media/converted'
 # PRIVATE_FILE_STORAGE = 'mhc.storage_backend.HhStorage'
 DEFAULT_FILE_STORAGE = 'mhc.storage_backend.JsonStorage'
 
