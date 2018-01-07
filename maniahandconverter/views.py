@@ -5,8 +5,10 @@ from django.core.files import File
 
 from .forms import HHForm
 from .converters import create_hh_object, create_hh_details, parse_hh_json
-from .controllers import create_hh, create_json_file
+from .controllers import save_hh, create_json_file
 from .models import HH, HHJson
+
+import time, json
 
 def index(request):
     return render(
@@ -15,32 +17,57 @@ def index(request):
         context={},
     )
 
+def post1(self, request, csrf, data):
+    hhForm = HHForm(self.request.POST, self.request.FILES)
+    if hhForm.is_valid() == True:
+        hh = hhForm.save()
+        data['is_valid'] = True
+        data['hh_id'] = hh.id
+        data['csrf'] = csrf
+
+def post2(self, request, csrf, hh_id, data):
+    hh = HH.objects.get(id=hh_id)
+    hh_obj = create_hh_object(hh)
+    hh_json = create_json_file(hh, hh_obj)
+    data['is_valid'] = True
+    data['csrf'] = csrf
+    data['hh_json_id'] = hh_json.id
+
+def post3(self, request, csrf, hh_json_id, data):
+    hh_json = HHJson.objects.get(id=hh_json_id)
+    hh_obj = json.loads(hh_json.file.read())
+    save_hh(hh_json.hh, hh_obj)
+    data['is_valid'] = True
+    data['csrf'] = csrf
+    data['players'] = hh_obj['players']
+
+def post4(self, request, csrf, hero, data):
+    data['is_valid'] = True
+    data['hero'] = hero
+
 class FileUploadView(View):
+
     def get(self, request):
         return render(self.request, 'upload.html')
 
     def post(self, request):
         csrf = request.POST.get('csrfmiddlewaretoken')
         files = self.request.FILES.get('file')
+        hh_id = self.request.POST.get('hh_id')
+        hh_json_id = self.request.POST.get('hh_json_id')
+        hero = self.request.POST.get('hero')
+        data = { 'is_valid': False }
 
-        if files is None:
-            return JsonResponse({'is_valid':False})
+        if files is not None:
+            post1(self, request, csrf, data)
+        elif hh_id is not None:
+            post2(self, request, csrf, hh_id, data)
+        elif hh_json_id is not None:
+            post3(self, request, csrf, hh_json_id, data)
+        elif hero is not None:
+            post4(self, request, csrf, hero, data)
 
-        hhForm = HHForm(self.request.POST, self.request.FILES)
-        if hhForm.is_valid() == False:
-            return JsonResponse({'is_valid':False})
-
-        hh = hhForm.save(commit=False)
-        hh_obj = create_hh_object(hh)
-        create_hh(hh, hh_obj)
-        create_json_file(hh, hh_obj)
-
-        return JsonResponse({
-            'is_valid':True,
-            'hh_obj':hh_obj,
-            'csrf':csrf,
-            'players':hh_obj['players']
-        })
+        return JsonResponse(data)
 
 class HistoryView(generic.ListView):
     model = HH

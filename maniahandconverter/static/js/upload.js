@@ -7,120 +7,140 @@ $(function() {
 
   $('#fileupload').fileupload({
     dataType: 'json',
-    add: function (e, data) {
-      var filename = data.files[0].name;
+    add: add,
+    done: done
+  });
 
-      var fileElem            =   $('<p/>')
-                                    .addClass('hh-name')
-                                    .text(filename);
+  function add(e, data) {
+    var filename            =   data.files[0].name;
 
-      var fileWrapperElem     =   $('<div/>')
-                                    .addClass('col-sm-4')
-                                    .addClass('hh-wrapper')
-                                    .append(fileElem);
-      var heroElem            =   heroInputElem
-                                    .clone()
-                                    .attr('type', 'text')
-      var heroWrapperElem     =   $('<div/>')
-                                    .addClass('col-sm-2')
-                                    .addClass('hero-input-wrapper')
-                                    .append(heroElem)
+    var fileElem            =   $('<p/>')
+                                  .addClass('hh-name')
+                                  .text(filename);
 
-      var convertElem         =   $('<input type="submit"/>')
-                                    .addClass('convert-button')
-                                    .val('Upload')
-                                    .click(function() {
-                                      convertElem.replaceWith('<p>Uploading...</p>');
-                                      data.submit();
-                                    });
-
-      var convertWrapperElem  =   $('<div/>')
-                                    .addClass('col-sm-2')
-                                    .addClass('convert-button-wrapper')
-                                    .append(convertElem);
-
-      var outerElem           =   $('<div/>')
-                                    .addClass('row')
-                                    .addClass('hh-wrapper')
-                                    .appendTo('.selected-hh')
-                                    .append(fileWrapperElem)
-                                    // .append(heroWrapperElem)
-                                    .append(convertWrapperElem)
-
-      data.context = $(outerElem);
-    },
-    // progress: function (e, data) {
-    //   var barElem = $('<div class="bar"></>')
-    //   var progressBarElem = $('<div/>')
-    //                           .addClass('.progress')
-    //                           .append(barElem)
-
-
-    //   var convertWrapperElem = data.context.find('.convert-button-wrapper');
-    //   $(convertWrapperElem).children().replaceWith(progressBarElem)
-    //    var progress = parseInt(data.loaded / data.total * 100, 10);
-    //    $(barElem).css(
-    //        'width',
-    //        progress + '%'
-    //    ).html(progress + '%');
-    // },
-    done: function (e, data) {
-      console.log(data);
-      var convertWrapperElem = data.context.find('.convert-button-wrapper');
-      if(data.result.is_valid) {
-        $(convertWrapperElem).children().replaceWith('<p>Done</p>');
-
-        var newSelectElem    =   $('<select/>').addClass('new-select-button');
-        $.each(data.result.players, function(key, value) {
-          newSelectElem
-            .append($("<option></option>")
-            .attr("value",key)
-            .text(key + ': ' + value['count']));
-        });
-
-        var newButtonElem   =   $('<input type="submit"/>')
-                                  .addClass('new-convert-button')
-                                  .val('Convert')
+    var fileWrapperElem     =   $('<div/>')
+                                  .addClass('col-sm-4')
+                                  .addClass('hh-wrapper')
+                                  .append(fileElem);
+    var convertElem         =   $('<input type="submit"/>')
+                                  .addClass('convert-button')
+                                  .val('Upload')
                                   .click(function() {
-                                    newButtonElem
-                                      .replaceWith('<span> Converting...</span>')
-
-                                    $.ajax({
-                                      type: 'POST',
-                                      url: window.location.href,
-                                      data: {
-                                        csrfmiddlewaretoken: data.result.csrf,
-                                        hero: newSelectElem.val(),
-                                        // obj: data.result.hh_obj
-                                      },
-                                      success: function(data) {
-                                        if(data.is_valid === true) {
-                                          var parentElem = convertWrapperElem.parent()
-                                          parentElem
-                                            .find('.new-form-wrapper')
-                                            .replaceWith('<p>'+data.hero+'</p>')
-                                        }
-                                      },
-                                      error: function(err) {
-                                        console.log(err);
-                                      },
-                                      dataType: 'json'
-                                    });
+                                    convertElem.replaceWith('<p>Uploading...</p>');
+                                    data.submit();
                                   });
 
-                                  // convert files
+    var convertWrapperElem  =   $('<div/>')
+                                  .addClass('col-sm-2')
+                                  .addClass('convert-button-wrapper')
+                                  .append(convertElem);
 
-        var formWrapperElem =   $('<div/>')
-                                  .addClass('col-sm-4')
-                                  .addClass('new-form-wrapper')
-                                  .append(newSelectElem)
-                                  .append(newButtonElem);
+    var outerElem           =   $('<div/>')
+                                  .addClass('row')
+                                  .addClass('hh-wrapper')
+                                  .appendTo('.selected-hh')
+                                  .append(fileWrapperElem)
+                                  .append(convertWrapperElem)
 
-        // outerElem
-        data.context.append(formWrapperElem);
+    data.context = $(outerElem);
+  }
+
+  function done(e, data) {
+    console.log('done', data.result);
+    var convertWrapperElem = data.context.find('.convert-button-wrapper');
+    var convertElem = convertWrapperElem.children();
+
+    if(data.result.is_valid) {
+      convertElem.html('<p>Syncing...</p>');
+      $.ajax({
+        type: 'POST',
+        url: window.location.href,
+        data: {
+          csrfmiddlewaretoken: data.result.csrf,
+          hh_id: data.result.hh_id,
+        },
+        success: success,
+        error: error,
+        dataType: 'json'
+      });
+    } else {
+      convertElem.html('<p>Error</p>');
+    }
+
+    function success(data) {
+      console.log('success1', data);
+
+      if(data.is_valid) {
+        convertElem.html('<p>Saving...</p>');
+        $.ajax({
+          type: 'POST',
+          url: window.location.href,
+          data: {
+            csrfmiddlewaretoken: data.csrf,
+            hh_json_id: data.hh_json_id,
+          },
+          success: function(data) {
+            console.log('success2', data);
+            var outerElem = convertWrapperElem.parent();
+
+            if(data.is_valid) {
+              convertElem.html('Done!');
+              var newSelectElem = $('<select/>').addClass('new-select-button');
+              $.each(data.players, function(key, value) {
+                newSelectElem
+                  .append($("<option></option>")
+                  .attr("value",key)
+                  .text(key + ': ' + value['count']));
+              });
+
+              var newButtonElem = $('<input type="submit"/>')
+                                    .addClass('new-convert-button')
+                                    .val('Convert')
+
+              newButtonElem.click(function() {
+                newButtonElem.replaceWith('<span> Converting...</span>')
+
+                $.ajax({
+                  type: 'POST',
+                  url: window.location.href,
+                  data: {
+                    csrfmiddlewaretoken: data.csrf,
+                    hero: newSelectElem.val(),
+                  },
+                  success: function(data) {
+                    console.log('final', data)
+                    if(data.is_valid === true) {
+                      var parentElem = convertWrapperElem.parent()
+                      parentElem
+                        .find('.new-form-wrapper')
+                        .replaceWith('<p>'+data.hero+'</p>')
+                    }
+                  },
+                  error: function(err) {
+                    console.log(err);
+                  },
+                  dataType: 'json'
+                });
+              });
+
+              var formWrapperElem = $('<div/>')
+                                      .addClass('col-sm-4')
+                                      .addClass('new-form-wrapper')
+                                      .append(newSelectElem)
+                                      .append(newButtonElem);
+
+              outerElem.append(formWrapperElem);
+            }
+          },
+          dataType: 'json'
+        });
       } else {
-        $(convertWrapperElem).children().replaceWith('<p>Please use .txt</p>');
+        convertElem.html('<p>Error</p>');
       }
     }
-  });
+
+    function error(err) {
+      console.log(err);
+    }
+  }
 });

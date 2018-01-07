@@ -7,16 +7,9 @@ import boto3
 import time, json
 #dict_keys(['players', 'games', 'unconvertable_hands', 'hands'])
 
-def create_hh(hh, hh_obj):
+def save_hh(hh, hh_obj):
     games = {}
     players = {}
-
-    a = time.time() #1
-
-    hh.save()
-
-    b = time.time() #2
-    print('upload time: ', b - a)
 
     for g in hh_obj['games']:
         game, created = Game.objects.get_or_create(name=g)
@@ -40,9 +33,6 @@ def create_hh(hh, hh_obj):
             sit = hh_obj['players'][p]['games'][g]['sit']
             hh_player_game = HH_Player_Game(hh_player=hh_player,game=games[g],amount=amount,count=count,sit=sit)
             hh_player_game.save()
-
-    c = time.time() #3
-    print('first database time: ', c - b)
 
     # for h in hh_obj['hands']:
     #     v = h['details']
@@ -82,3 +72,4 @@ def create_json_file(hh, hh_obj):
     file.write(json_text)
     hh_json = HHJson(hh=hh, file=file)
     hh_json.save()
+    return hh_json
