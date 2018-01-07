@@ -20,23 +20,34 @@ def index(request):
 def post1(self, request, csrf, data):
     hhForm = HHForm(self.request.POST, self.request.FILES)
     if hhForm.is_valid() == True:
+        a = time.time()
         hh = hhForm.save()
+        b = time.time()
+        print('post1: ', b - a)
         data['is_valid'] = True
         data['hh_id'] = hh.id
         data['csrf'] = csrf
 
 def post2(self, request, csrf, hh_id, data):
     hh = HH.objects.get(id=hh_id)
+    a = time.time()
     hh_obj = create_hh_object(hh)
+    b = time.time()
+    print('post2a: ', b - a)
     hh_json = create_json_file(hh, hh_obj)
+    c = time.time()
+    print('post2b: ', c - b)
     data['is_valid'] = True
     data['csrf'] = csrf
     data['hh_json_id'] = hh_json.id
 
 def post3(self, request, csrf, hh_json_id, data):
     hh_json = HHJson.objects.get(id=hh_json_id)
-    hh_obj = json.loads(hh_json.file.read())
+    a = time.time()
+    hh_obj = parse_hh_json(hh_json.file)
     save_hh(hh_json.hh, hh_obj)
+    b = time.time()
+    print('post3: ', b - a)
     data['is_valid'] = True
     data['csrf'] = csrf
     data['players'] = hh_obj['players']
