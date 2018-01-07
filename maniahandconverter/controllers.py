@@ -36,34 +36,37 @@ def handle_hh_models(hh, hh_obj):
             hh_player_game = HH_Player_Game(hh_player=hh_player,game=games[g],amount=amount,count=count,sit=sit)
             hh_player_game.save()
 
-    for h in hh_obj['hands']:
-        v = h['details']
-        hand = Hand(
-            game        = games[v['game']],
-            hand_number = v['hand_number'],
-            date_played = v['date'],
-            time_played = v['time'],
-            sb          = v['sb'],
-            bb          = v['bb'],
-            ante        = v['ante'],
-            table       = v['table'],
-            blind_type  = v['blind_type'],
-            rake        = v['rake'],
-            pot         = v['pot'],
-            sitting     = v['sitting'],
-            dealt       = v['dealt'],
-            body        = v['body'],
-        )
-        hand.save()
+    # for h in hh_obj['hands']:
+    #     v = h['details']
+    #     hand = Hand(
+    #         game        = games[v['game']],
+    #         hand_number = v['hand_number'],
+    #         date_played = v['date'],
+    #         time_played = v['time'],
+    #         sb          = v['sb'],
+    #         bb          = v['bb'],
+    #         ante        = v['ante'],
+    #         table       = v['table'],
+    #         blind_type  = v['blind_type'],
+    #         rake        = v['rake'],
+    #         pot         = v['pot'],
+    #         sitting     = v['sitting'],
+    #         dealt       = v['dealt'],
+    #         body        = v['body'],
+    #     )
+    #     hand.save()
 
-        for p in v['players']:
-            hh_player = Hand_Player(
-                hand    = hand,
-                player  = players[p],
-                amount  = v['players'][p]['result'],
-                sitting = v['players'][p]['is_sitting']
-            )
-            hh_player.save()
+    #     for p in v['players']:
+    #         hh_player = Hand_Player(
+    #             hand    = hand,
+    #             player  = players[p],
+    #             amount  = v['players'][p]['result'],
+    #             sitting = v['players'][p]['is_sitting']
+    #         )
+    #         hh_player.save()
+
+    # d = time.time()
+    # print('next database time:', d - c)
 
 def save_json_file(hh, hh_obj):
     file = default_storage.open(hh.file.name, 'w')
@@ -84,15 +87,26 @@ def save_hh_file(self, request, csrf, data):
         data['hh_id'] = hh.id
         data['csrf'] = csrf
 
-def save_hh_models(self, request, csrf, hh_id, data):
+def save_hh_obj(self, request, csrf, hh_id, data):
     hh = HH.objects.get(id=hh_id)
     a = time.time()
     hh_obj = create_hh_object(hh)
     b = time.time()
     print('post2a: ', b - a)
-    handle_hh_models(hh, hh_obj)
+    hh_json = save_json_file(hh, hh_obj)
     c = time.time()
     print('post2b: ', c - b)
+    data['is_valid'] = True
+    data['csrf'] = csrf
+    data['hh_json_id'] = hh_json.id
+
+def save_hh_models(self, request, csrf, hh_json_id, data):
+    hh_json = HHJson.objects.get(id=hh_json_id)
+    a = time.time()
+    hh_obj = parse_hh_json(hh_json.file)
+    handle_hh_models(hh_json.hh, hh_obj)
+    b = time.time()
+    print('post3: ', b - a)
     data['is_valid'] = True
     data['csrf'] = csrf
     data['players'] = hh_obj['players']

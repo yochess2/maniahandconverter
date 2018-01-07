@@ -73,56 +73,72 @@ $(function() {
     }
 
     function success(data) {
-      console.log('success2', data);
-      var outerElem = convertWrapperElem.parent();
+      console.log('success1', data);
 
       if(data.is_valid) {
-        convertElem.html('Done!');
-        var newSelectElem = $('<select/>').addClass('new-select-button');
-        $.each(data.players, function(key, value) {
-          newSelectElem
-            .append($("<option></option>")
-            .attr("value",key)
-            .text(key + ': ' + value['count']));
+        convertElem.html('<p>Saving...</p>');
+        $.ajax({
+          type: 'POST',
+          url: window.location.href,
+          data: {
+            csrfmiddlewaretoken: data.csrf,
+            hh_json_id: data.hh_json_id,
+          },
+          success: function(data) {
+            console.log('success2', data);
+            var outerElem = convertWrapperElem.parent();
+
+            if(data.is_valid) {
+              convertElem.html('Done!');
+              var newSelectElem = $('<select/>').addClass('new-select-button');
+              $.each(data.players, function(key, value) {
+                newSelectElem
+                  .append($("<option></option>")
+                  .attr("value",key)
+                  .text(key + ': ' + value['count']));
+              });
+
+              var newButtonElem = $('<input type="submit"/>')
+                                    .addClass('new-convert-button')
+                                    .val('Convert')
+
+              newButtonElem.click(function() {
+                newButtonElem.replaceWith('<span> Converting...</span>')
+
+                $.ajax({
+                  type: 'POST',
+                  url: window.location.href,
+                  data: {
+                    csrfmiddlewaretoken: data.csrf,
+                    hero: newSelectElem.val(),
+                  },
+                  success: function(data) {
+                    console.log('final', data)
+                    if(data.is_valid === true) {
+                      var parentElem = convertWrapperElem.parent()
+                      parentElem
+                        .find('.new-form-wrapper')
+                        .replaceWith('<p>'+data.hero+'</p>')
+                    }
+                  },
+                  error: function(err) {
+                    console.log(err);
+                  },
+                  dataType: 'json'
+                });
+              });
+
+              var formWrapperElem = $('<div/>')
+                                      .addClass('col-sm-4')
+                                      .addClass('new-form-wrapper')
+                                      .append(newSelectElem)
+                                      .append(newButtonElem);
+
+              outerElem.append(formWrapperElem);
+            }
+          },
+          dataType: 'json'
         });
-
-        var newButtonElem = $('<input type="submit"/>')
-                              .addClass('new-convert-button')
-                              .val('Convert')
-
-        newButtonElem.click(function() {
-          newButtonElem.replaceWith('<span> Converting...</span>')
-
-          $.ajax({
-            type: 'POST',
-            url: window.location.href,
-            data: {
-              csrfmiddlewaretoken: data.csrf,
-              hero: newSelectElem.val(),
-            },
-            success: function(data) {
-              console.log('final', data)
-              if(data.is_valid === true) {
-                var parentElem = convertWrapperElem.parent()
-                parentElem
-                  .find('.new-form-wrapper')
-                  .replaceWith('<p>'+data.hero+'</p>')
-              }
-            },
-            error: function(err) {
-              console.log(err);
-            },
-            dataType: 'json'
-          });
-        });
-
-        var formWrapperElem = $('<div/>')
-                                .addClass('col-sm-4')
-                                .addClass('new-form-wrapper')
-                                .append(newSelectElem)
-                                .append(newButtonElem);
-
-        outerElem.append(formWrapperElem);
       } else {
         convertElem.html('<p>Error</p>');
       }

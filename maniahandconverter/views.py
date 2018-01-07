@@ -4,7 +4,7 @@ from django.http import JsonResponse, HttpResponse
 from django.core.files import File
 
 from .converters import create_hh_object, create_hh_details, parse_hh_json
-from .controllers import save_hh_models, save_hh_file, save_hh_models, post4
+from .controllers import save_hh_models, save_hh_file, save_hh_obj, save_hh_models, post4
 from .models import HH
 
 import time, json
@@ -32,9 +32,9 @@ class FileUploadView(View):
         if files is not None:
             save_hh_file(self, request, csrf, data)
         elif hh_id is not None:
-            save_hh_models(self, request, csrf, hh_id, data)
+            save_hh_obj(self, request, csrf, hh_id, data)
         elif hh_json_id is not None:
-            post3(self, request, csrf, hh_json_id, data)
+            save_hh_models(self, request, csrf, hh_json_id, data)
         elif hero is not None:
             post4(self, request, csrf, hero, data)
 
