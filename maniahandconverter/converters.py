@@ -28,5 +28,5 @@ def create_hh_details(hh_obj):
 def parse_hh_json(file):
     byte_text = file.read()
     string = byte_text.decode('utf-8')
-    json_text = json.loads(string)
-    return json_text
+    hh_obj = json.loads(string)
+    return hh_obj
