@@ -7,7 +7,7 @@ from .converters import create_hh_object, create_hh_details, parse_hh_json
 from .controllers import save_hh_models, handle_hh_file, handle_hh_obj, handle_hh_models, handle_new_hh_history, handle_new_hh_detail
 from .models import HH, HHJson, HHNew, HHJson_Player
 
-import time, json
+import time, json, boto3, os
 
 def index(request):
     return render(
@@ -73,3 +73,35 @@ def get_hh_obj(request, **kwargs):
 def get_new_hh(request, **kwargs):
     new_hh = HHNew.objects.get(id=kwargs['pk'])
     return HttpResponse(new_hh.file.read(), content_type='text/plain')
+
+def sign_s3(request, **kwargs):
+
+    S3_BUCKET = os.environ.get('S3_BUCKET')
+    file_name = request.GET.get('file_name')
+    file_type = request.GET.get('file_type')
+
+    s3 = boto3.client('s3')
+    presigned_post = s3.generate_presigned_post(
+        Bucket = S3_BUCKET,
+        Key = file_name,
+        Fields = {"acl": "public-read", "Content-Type": file_type},
+        Conditions = [
+          {"acl": "public-read"},
+          {"Content-Type": file_type}
+        ],
+        ExpiresIn = 3600
+    )
+    data = json.dumps({
+        'data': presigned_post,
+        'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name)
+    })
+    return HttpResponse(data, content_type="application/json")
+
+class FileUploadView_2(View):
+    def get(self, request):
+        return render(self.request, 'upload_2.html')
+
+    def post(self, request):
+        data = {};
+
+        return JsonResponse(data)
