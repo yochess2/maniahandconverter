@@ -8,7 +8,12 @@ $(function() {
   $('#fileupload').fileupload({
     dataType: 'json',
     add: add,
-    done: done
+    done: done,
+    fail: function(e, data) {
+      var convertWrapperElem = data.context.find('.convert-button-wrapper');
+      var convertElem = convertWrapperElem.children();
+      convertElem.html('<p>FAIL</p>');
+    }
   });
 
   function add(e, data) {
