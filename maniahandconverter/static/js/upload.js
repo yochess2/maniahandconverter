@@ -111,6 +111,7 @@ $(function() {
                   data: {
                     csrfmiddlewaretoken: data.csrf,
                     hero: newSelectElem.val(),
+                    hh_json_id: data.hh_json_id,
                   },
                   success: function(data) {
                     console.log('final', data)
@@ -118,7 +119,7 @@ $(function() {
                       var parentElem = convertWrapperElem.parent()
                       parentElem
                         .find('.new-form-wrapper')
-                        .replaceWith('<p>'+data.hero+'</p>')
+                        .replaceWith('<p><a target="_blank" href="/new/'+data.new_hh_id+'">'+data.hero+'</a></p>')
                     }
                   },
                   error: function(err) {

@@ -15,7 +15,7 @@ $(function() {
       },
       success: function(data) {
         if(data.is_valid === true) {
-          $list.append('<li><a href="/new/'+ data.new_hh_id +'">'+ data.hero +'</li>')
+          $list.append('<li><a target="_blank" href="/new/'+ data.new_hh_id +'">'+ data.hero +'</li>')
           $message.html('');
         } else {
           $message.html('already exists');

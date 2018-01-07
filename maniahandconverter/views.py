@@ -4,7 +4,7 @@ from django.http import JsonResponse, HttpResponse
 from django.core.files import File
 
 from .converters import create_hh_object, create_hh_details, parse_hh_json
-from .controllers import save_hh_models, handle_hh_file, handle_hh_obj, handle_hh_models, post4, handle_new_hh
+from .controllers import save_hh_models, handle_hh_file, handle_hh_obj, handle_hh_models, handle_new_hh_history, handle_new_hh_detail
 from .models import HH, HHJson, HHNew, HHJson_Player
 
 import time, json
@@ -33,10 +33,11 @@ class FileUploadView(View):
             handle_hh_file(self, request, csrf, data)
         elif hh_id is not None:
             handle_hh_obj(self, request, csrf, hh_id, data)
-        elif hh_json_id is not None:
+        elif hh_json_id is not None and hero is None:
             handle_hh_models(self, request, csrf, hh_json_id, data)
         elif hero is not None:
-            post4(self, request, csrf, hero, data)
+            # refactor this in the future...
+            handle_new_hh_history(self, request, csrf, hh_json_id, hero, data)
 
         return JsonResponse(data)
 
@@ -55,7 +56,7 @@ class HistoryDetailView(generic.DetailView):
         hero_id = self.request.POST.get('hero_id')
         hh_id = kwargs['pk']
 
-        handle_new_hh(hero_id, hh_id, data)
+        handle_new_hh_detail(hero_id, hh_id, data)
         return JsonResponse(data)
 
 def get_hh(request, **kwargs):

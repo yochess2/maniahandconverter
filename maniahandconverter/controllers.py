@@ -76,6 +76,13 @@ def save_json_file(hh, hh_obj):
     hh_json.save()
     return hh_json
 
+def save_new_hh(hh_json, hero):
+    file = default_storage.open(hh_json.hh.file.name, 'w')
+    file.write(hero)
+    new_hh = HHNew(hh_json=hh_json, file=file, hero=hero)
+    new_hh.save()
+    return new_hh
+
 def handle_hh_file(self, request, csrf, data):
     hhForm = HHForm(self.request.POST, self.request.FILES)
     if hhForm.is_valid() == True:
@@ -110,12 +117,18 @@ def handle_hh_models(self, request, csrf, hh_json_id, data):
     data['is_valid'] = True
     data['csrf'] = csrf
     data['players'] = hh_obj['players']
+    data['hh_json_id'] = hh_json.id
 
-def post4(self, request, csrf, hero, data):
-    data['is_valid'] = True
+def handle_new_hh_history(self, request, csrf, hh_json_id, hero, data):
+    hh_json = HHJson.objects.get(id=hh_json_id)
+    hh_obj = parse_hh_json(hh_json.file)
+
+    new_hh = save_new_hh(hh_json, hero)
     data['hero'] = hero
+    data['is_valid'] = True
+    data['new_hh_id'] = new_hh.id
 
-def handle_new_hh(hero_id, hh_id, data):
+def handle_new_hh_detail(hero_id, hh_id, data):
     hh_json_player = HHJson_Player.objects.get(id=hero_id)
     hh_json = hh_json_player.hh_json
 
@@ -123,19 +136,7 @@ def handle_new_hh(hero_id, hh_id, data):
         data['is_valid'] = False
     else:
         hh_obj = parse_hh_json(hh_json.file)
-
-        file = default_storage.open(hh_json.hh.file.name, 'w')
-        file.write(hh_json_player.player.name)
-        new_hh = HHNew(hh_json=hh_json, file=file, hero=hh_json_player.player.name)
-        new_hh.save()
+        new_hh = save_new_hh(hh_json, hh_json_player.player.name)
         data['is_valid'] = True
         data['hero'] = hh_json_player.player.name
         data['new_hh_id'] = new_hh.id
-
-
-
-
-
-
-
-
