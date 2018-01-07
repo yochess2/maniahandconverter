@@ -12,7 +12,7 @@ $(function() {
     fail: function(e, data) {
       var convertWrapperElem = data.context.find('.convert-button-wrapper');
       var convertElem = convertWrapperElem.children();
-      convertElem.html('<p>FAIL</p>');
+      convertElem.html('<p>FAIL (please upload less files simultaneously)</p>');
     }
   });
 
