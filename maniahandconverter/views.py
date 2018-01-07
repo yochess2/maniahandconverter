@@ -72,4 +72,4 @@ def get_hh_obj(request, **kwargs):
 
 def get_new_hh(request, **kwargs):
     new_hh = HHNew.objects.get(id=kwargs['pk'])
-    return HttpResponse(new_hh.file.read())
+    return HttpResponse(new_hh.file.read(), content_type='text/plain')

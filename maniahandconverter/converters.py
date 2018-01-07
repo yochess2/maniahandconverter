@@ -1,4 +1,4 @@
-from .converter import hh_to_object
+from .converter import hh_to_object, object_to_new_hh
 import tempfile, json
 
 def create_hh_object(hh):
@@ -30,3 +30,12 @@ def parse_hh_json(file):
     string = byte_text.decode('utf-8')
     hh_obj = json.loads(string)
     return hh_obj
+
+def create_new_hh(hh_obj, hero):
+    obj =  object_to_new_hh.init(hh_obj, hero)
+
+    text = '\n'.join(obj['not_supported_hands_array']) + \
+      '\n\n\n\n\n' + '\n'.join(obj['has_side_array']) + \
+      '\n\n\n\n\n' + '\n\n'.join(obj['supported_hands_array'])
+
+    return text

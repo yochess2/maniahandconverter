@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.core.files.storage import default_storage
 
-from .converters import create_hh_object, parse_hh_json
+from .converters import create_hh_object, parse_hh_json, create_new_hh
 from .models import HH, Player, Game, HHJson_Player, HHJson_Player_Game, HHJson, HHNew
 from .forms import HHForm
 
@@ -77,8 +77,12 @@ def save_json_file(hh, hh_obj):
     return hh_json
 
 def save_new_hh(hh_json, hero):
+    hh_obj = parse_hh_json(hh_json.file)
+    new_hh_text = create_new_hh(hh_obj, hero)
+
     file = default_storage.open(hh_json.hh.file.name, 'w')
-    file.write(hero)
+    file.write(new_hh_text)
+
     new_hh = HHNew(hh_json=hh_json, file=file, hero=hero)
     new_hh.save()
     return new_hh
@@ -121,7 +125,6 @@ def handle_hh_models(self, request, csrf, hh_json_id, data):
 
 def handle_new_hh_history(self, request, csrf, hh_json_id, hero, data):
     hh_json = HHJson.objects.get(id=hh_json_id)
-    hh_obj = parse_hh_json(hh_json.file)
 
     new_hh = save_new_hh(hh_json, hero)
     data['hero'] = hero
@@ -135,7 +138,6 @@ def handle_new_hh_detail(hero_id, hh_id, data):
     if len(HHNew.objects.filter(hero=hh_json_player.player.name, hh_json=hh_json)) > 0:
         data['is_valid'] = False
     else:
-        hh_obj = parse_hh_json(hh_json.file)
         new_hh = save_new_hh(hh_json, hh_json_player.player.name)
         data['is_valid'] = True
         data['hero'] = hh_json_player.player.name

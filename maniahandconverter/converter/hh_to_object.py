@@ -28,10 +28,10 @@ def init(old_hh_text):
             stripped_line = line.strip()
             if len(stripped_line) > 0:
                 lines.append(stripped_line)
-            if stripped_line == "** Summary **":
-                push_to_body = False
-            if push_to_body == True:
-                body.append(stripped_line)
+                if stripped_line == "** Summary **":
+                    push_to_body = False
+                if push_to_body == True:
+                    body.append(stripped_line)
         return lines
 
     hh_obj = {
@@ -160,7 +160,7 @@ def create_hand(old_lines, old_hand_text, body):
         'rake_and_pot': r'^Rake \((\d+\.?\d*)\) Pot \((\d+\.?\d*)\)',
         'player_seating': r'^Seat (\d): (.*) \((\d+\.?\d*)\)( - sitting out)?',
         'player_result': r'^Seat \d+: (.*) \(([+|-]\d+\.?\d*)\) \[(.*)\] (.*)',
-        'side_pot': r'^(.*) (wins|splits) Side Pot \d (.*)'
+        'side_pot': r'^(.*) (wins|splits) (Hi |Lo )?Side Pot \d (.*)'
     }
 
     if bool(get_hand_and_date(object_hand, old_lines[0], re_lines['hand_and_date'])) == False:
