@@ -34,7 +34,7 @@ $(function() {
                                   });
 
     var convertWrapperElem  =   $('<div/>')
-                                  .addClass('col-sm-2')
+                                  .addClass('col-sm-3')
                                   .addClass('convert-button-wrapper')
                                   .append(convertElem);
 
@@ -55,11 +55,15 @@ $(function() {
       if(xhr.readyState === 4){
         if(xhr.status === 200){
           var response = JSON.parse(xhr.responseText);
-          convertWrapperElem.children().html('Uploading File... 2/4');
-          uploadFile(file, response.data, response.url, response.hh_id, convertWrapperElem, outerElem);
+          if (response.is_valid) {
+            convertWrapperElem.children().html('Uploading File... 2/4');
+            uploadFile(file, response.data, response.url, response.hh_id, convertWrapperElem, outerElem);
+          } else {
+            convertWrapperElem.children().html('File needs to end in .txt');
+          }
         }
         else{
-          alert("Could not get signed URL.");
+          convertWrapperElem.children().html('Could not get signed URL.');
         }
       }
     };
@@ -109,7 +113,7 @@ $(function() {
                       var newButtonElem = $('<input type="submit"/>');
 
                       formWrapperElem
-                        .addClass('col-sm-4')
+                        .addClass('col-sm-5')
                         .addClass('new-form-wrapper')
                         .append(newSelectElem)
                         .append(newButtonElem);
@@ -128,6 +132,8 @@ $(function() {
                         .val('Convert')
 
                       newButtonElem.click(function() {
+                        var parentElem = convertWrapperElem.parent()
+                        formWrapperElem.html('<p>Converting...</p>');
                         $.ajax({
                           type: 'POST',
                           url: window.location.href,
@@ -139,16 +145,15 @@ $(function() {
                           },
                           success: function(data_3) {
                             if (data_3.is_valid) {
-                              console.log('yay', data);
-
-                              var parentElem = convertWrapperElem.parent()
                               parentElem
                                 .find('.new-form-wrapper')
                                 .html('<p><a target="_blank" href="/new/'+data_3.new_hh_id+'">'+data_3.hero+'</a></p>')
                             }
                           },
                           error: function(err) {
-                            console.error(err);
+                            parentElem
+                              .find('.new-form-wrapper')
+                              .html('<p>Error Converting File</p>')
                           },
                           dataType: 'json'
                         })
@@ -156,20 +161,20 @@ $(function() {
                     }
                   },
                   error: function(err) {
-                    console.error(err);
+                    convertWrapperElem.children().html('Error Creating Models...')
                   },
                   dataType: 'json'
                 });
               }
             },
             error: function(err) {
-              console.error(err);
+              convertWrapperElem.children().html('Error Creating Objects...')
             },
             dataType: 'json'
           });
         }
         else{
-          alert("Could not upload file.");
+          convertWrapperElem.children().html('Could not upload file.');
         }
      }
     };

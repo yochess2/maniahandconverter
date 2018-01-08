@@ -51,12 +51,7 @@ def sign_s3(request, **kwargs):
     file_type       = request.GET.get('file_type')
     file_size       = request.GET.get('file_size')
     file_path, ext  = os.path.splitext(file_name)
-
-    if ext != '.txt':
-        return HttpResponse(status=403)
-
-    data = handle_sign_s3(file_name, file_type, file_size, ext)
-    return JsonResponse(data)
+    return JsonResponse(handle_sign_s3(file_name, file_type, file_size, ext))
 
 class FileUploadView(View):
     def get(self, request):
@@ -75,7 +70,6 @@ class FileUploadView(View):
             hh_id       = self.request.POST.get('hh_id')
             key         = self.request.POST.get('key')
             data        = handle_fileupload_1(hh_id, key)
-
         # After hh object is saved, models are created:
         #   1. player models
         #   2. game models

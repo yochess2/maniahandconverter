@@ -45,9 +45,13 @@ def handle_history_detail(hero_id):
 
 
 def handle_sign_s3(file_name, file_type, file_size, ext):
+    if ext != '.txt':
+        return {'is_valid': False,'message': 'Not a .txt file'}
+
     hh              = create_hh_model(file_name, file_type, file_size, ext)
     presigned_post  = create_s3_signature(hh.path, file_type)
     return {
+        'is_valid': True,
         'data': presigned_post,
         'hh_id': hh.id,
         'url': '{}/{}'.format(S3_DOMAIN, hh.path)

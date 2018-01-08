@@ -5,6 +5,9 @@ def create_hh_details(hh_obj):
     unconvertable_hands = []
     convertable_hands = []
     for hand in hh_obj['unconvertable_hands']:
+        if 'hand_number' not in hand['details']:
+            continue
+
         message = "Hand #{}: {}".format(
             hand['details']['hand_number'],
             hand['error']['message']
