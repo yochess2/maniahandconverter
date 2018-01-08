@@ -1,7 +1,7 @@
 $(function() {
   var csrf_token = $('meta[name="csrf-token"]').attr('content');
+  var hhjsonId = $('meta[name="hhjson-id"]').attr('content');
   var $select = $('select');
-  var $hhjsonId = $('#hhjson-id');
   var $list = $('.converted-file-list');
   var $message = $('#message')
   $('button').on('click', function(evt) {
@@ -10,7 +10,7 @@ $(function() {
     evt.preventDefault();
     $.ajax({
       type: 'POST',
-      url: window.location.origin + '/history/' + $hhjsonId.html() + '/',
+      url: window.location.origin + '/history/' + hhjsonId + '/',
       data: {
         csrfmiddlewaretoken: csrf_token,
         hero_id: $select.val()

@@ -30,4 +30,4 @@ def create_new_hh_text(hh_obj, hero):
       '\n\n\n\n\n' + '\n'.join(obj['has_side_array']) + \
       '\n\n\n\n\n' + '\n\n'.join(obj['supported_hands_array'])
 
-    return text
+    return text.strip()

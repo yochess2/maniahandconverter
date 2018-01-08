@@ -4,6 +4,7 @@
 
 {% block javascript %}
 <meta name="csrf-token" content="{{csrf_token}}">
+<meta name="hhjson-id" content="{{hhjson.id}}">
 {% load static %}
 <script src="{% static 'js/history_detail.js' %}"></script>
 <link rel="stylesheet" href="{% static 'css/history_detail.css' %}">
@@ -12,9 +13,7 @@
 
 {% block content %}
 <h2>Details</h2>
-<span>File: <span>{{hhjson.hh}}</span></span>
-<br>
-<span>Id: <span id="hhjson-id">{{hhjson.id}}</span></span>
+<span>{{hhjson.hh}}</span>
 
 <div class="history-detail-original">
   <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
