@@ -5,6 +5,8 @@ $(function() {
   var $list = $('.converted-file-list');
   var $message = $('#message')
   $('button').on('click', function(evt) {
+    var $button = $(this);
+    $button.attr('disabled','disabled');
     evt.preventDefault();
     $.ajax({
       type: 'POST',
@@ -14,6 +16,7 @@ $(function() {
         hero_id: $select.val()
       },
       success: function(data) {
+        $button.removeAttr('disabled');
         if(data.is_valid === true) {
           $list.append('<li><a target="_blank" href="/new/'+ data.new_hh_id +'">'+ data.hero +'</li>')
           $message.html('');
