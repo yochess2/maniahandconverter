@@ -1,11 +1,6 @@
 from .converter import hh_to_object, object_to_new_hh
 import tempfile, json
 
-def create_hh_object(hh):
-    hh_text = str(hh.file.read(), 'utf-8').strip()
-    obj = hh_to_object.init(hh_text)
-    return obj
-
 def create_hh_details(hh_obj):
     unconvertable_hands = []
     convertable_hands = []
@@ -25,13 +20,7 @@ def create_hh_details(hh_obj):
 
     return '\n'.join(unconvertable_hands + convertable_hands)
 
-def parse_hh_json(file):
-    byte_text = file.read()
-    string = byte_text.decode('utf-8')
-    hh_obj = json.loads(string)
-    return hh_obj
-
-def create_new_hh(hh_obj, hero):
+def create_new_hh_text(hh_obj, hero):
     obj =  object_to_new_hh.init(hh_obj, hero)
 
     text = '\n'.join(obj['not_supported_hands_array']) + \

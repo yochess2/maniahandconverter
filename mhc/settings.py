@@ -141,10 +141,16 @@ AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
-AWS_HH_LOCATION = 'media/unconverted'
-AWS_JSON_LOCATION = 'media/json'
-AWS_CONVERTED_LOCATION = 'media/converted'
-# PRIVATE_FILE_STORAGE = 'mhc.storage_backend.HhStorage'
+
+if DEBUG == True:
+    root_folder = 'local'
+else:
+    root_folder = 'media'
+
+AWS_HH_LOCATION = '%s/unconverted' % (root_folder)
+AWS_JSON_LOCATION = '%s/json' % (root_folder)
+AWS_CONVERTED_LOCATION = '%s/converted' % (root_folder)
+
 DEFAULT_FILE_STORAGE = 'mhc.storage_backend.JsonStorage'
 
 import dj_database_url

@@ -1,6 +1,9 @@
+// After user selects HHs, a bunch of files populates the screen
+// Then when the user clicks upload on a file,
+//   1. a signature is requested from the backend
+//   2. the file is then uploaded to s3 from the frontend
+//   3. another request is made to the backend to create a HH Object
 $(function() {
-  var heroInputElem = $('.hero-input');
-
   $(".js-upload-hhs").click(function () {
     $("#fileupload").click();
   });
@@ -8,12 +11,6 @@ $(function() {
   $('#fileupload').fileupload({
     dataType: 'json',
     add: add,
-    done: done,
-    fail: function(e, data) {
-      var convertWrapperElem = data.context.find('.convert-button-wrapper');
-      var convertElem = convertWrapperElem.children();
-      convertElem.html('<p>FAIL (please upload less files simultaneously)</p>');
-    }
   });
 
   function add(e, data) {
@@ -31,8 +28,9 @@ $(function() {
                                   .addClass('convert-button')
                                   .val('Upload')
                                   .click(function() {
-                                    convertElem.replaceWith('<p>Uploading...</p>');
-                                    data.submit();
+                                    file = data.files[0];
+                                    convertElem.replaceWith('<p>Getting Signature... 1/4</p>');
+                                    getSignedRequest(file, convertWrapperElem, outerElem);
                                   });
 
     var convertWrapperElem  =   $('<div/>')
@@ -47,106 +45,133 @@ $(function() {
                                   .append(fileWrapperElem)
                                   .append(convertWrapperElem)
 
-    data.context = $(outerElem);
   }
 
-  function done(e, data) {
-    console.log('done', data.result);
-    var convertWrapperElem = data.context.find('.convert-button-wrapper');
-    var convertElem = convertWrapperElem.children();
+  function getSignedRequest(file, convertWrapperElem, outerElem){
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/sign_s3?file_name="+file.name+"&file_type="+file.type+"&file_size="+file.size);
 
-    if(data.result.is_valid) {
-      convertElem.html('<p>Syncing...</p>');
-      $.ajax({
-        type: 'POST',
-        url: window.location.href,
-        data: {
-          csrfmiddlewaretoken: data.result.csrf,
-          hh_id: data.result.hh_id,
-        },
-        success: success,
-        error: error,
-        dataType: 'json'
-      });
-    } else {
-      convertElem.html('<p>Error</p>');
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState === 4){
+        if(xhr.status === 200){
+          var response = JSON.parse(xhr.responseText);
+          convertWrapperElem.children().html('Uploading File... 2/4');
+          uploadFile(file, response.data, response.url, response.hh_id, convertWrapperElem, outerElem);
+        }
+        else{
+          alert("Could not get signed URL.");
+        }
+      }
+    };
+    xhr.send();
+  }
+
+  function uploadFile(file, s3Data, url, hh_id, convertWrapperElem, outerElem){
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", s3Data.url);
+    var postData = new FormData();
+    for(key in s3Data.fields){
+      postData.append(key, s3Data.fields[key]);
     }
-
-    function success(data) {
-      console.log('success1', data);
-
-      if(data.is_valid) {
-        convertElem.html('<p>Saving...</p>');
-        $.ajax({
-          type: 'POST',
-          url: window.location.href,
-          data: {
-            csrfmiddlewaretoken: data.csrf,
-            hh_json_id: data.hh_json_id,
-          },
-          success: function(data) {
-            console.log('success2', data);
-            var outerElem = convertWrapperElem.parent();
-
-            if(data.is_valid) {
-              convertElem.html('Done!');
-              var newSelectElem = $('<select/>').addClass('new-select-button');
-              $.each(data.players, function(key, value) {
-                newSelectElem
-                  .append($("<option></option>")
-                  .attr("value",key)
-                  .text(key + ': ' + value['count']));
-              });
-
-              var newButtonElem = $('<input type="submit"/>')
-                                    .addClass('new-convert-button')
-                                    .val('Convert')
-
-              newButtonElem.click(function() {
-                newButtonElem.replaceWith('<span> Converting...</span>')
-
+    postData.append('file', file);
+    xhr.send(postData);
+    xhr.onreadystatechange = function() {
+      if(xhr.readyState === 4){
+        if(xhr.status === 200 || xhr.status === 204){
+          convertWrapperElem.children().html('Creating Object... 3/4');
+          var csrf_token = $('meta[name="csrf-token"]').attr('content');
+          $.ajax({
+            type: 'POST',
+            url: window.location.href,
+            data: {
+              csrfmiddlewaretoken: csrf_token,
+              hh_id: hh_id,
+              key: s3Data.fields.key,
+              type: 'sync1'
+            },
+            success: function(data) {
+              if (data.is_valid) {
+                convertWrapperElem.children().html('Creating Models... 4/4')
                 $.ajax({
                   type: 'POST',
                   url: window.location.href,
                   data: {
-                    csrfmiddlewaretoken: data.csrf,
-                    hero: newSelectElem.val(),
+                    csrfmiddlewaretoken: csrf_token,
                     hh_json_id: data.hh_json_id,
+                    type: 'sync2'
                   },
-                  success: function(data) {
-                    console.log('final', data)
-                    if(data.is_valid === true) {
-                      var parentElem = convertWrapperElem.parent()
-                      parentElem
-                        .find('.new-form-wrapper')
-                        .replaceWith('<p><a target="_blank" href="/new/'+data.new_hh_id+'">'+data.hero+'</a></p>')
+                  success: function(data_2) {
+                    if (data_2.is_valid) {
+                      convertWrapperElem.children().html('Done!')
+
+                      var formWrapperElem = $('<div/>');
+                      var newSelectElem = $('<select/>').addClass('new-select-button');
+                      var newButtonElem = $('<input type="submit"/>');
+
+                      formWrapperElem
+                        .addClass('col-sm-4')
+                        .addClass('new-form-wrapper')
+                        .append(newSelectElem)
+                        .append(newButtonElem);
+
+                      $.each(data_2.players, function(key, value) {
+                        newSelectElem
+                          .append($("<option></option>")
+                          .attr("value",key)
+                          .text(key + ': ' + value['count']));
+                      });
+
+                      outerElem.append(formWrapperElem);
+
+                      newButtonElem
+                        .addClass('new-convert-button')
+                        .val('Convert')
+
+                      newButtonElem.click(function() {
+                        $.ajax({
+                          type: 'POST',
+                          url: window.location.href,
+                          data: {
+                            csrfmiddlewaretoken: csrf_token,
+                            hero: newSelectElem.val(),
+                            hh_json_id: data.hh_json_id,
+                            type: 'convert'
+                          },
+                          success: function(data_3) {
+                            if (data_3.is_valid) {
+                              console.log('yay', data);
+
+                              var parentElem = convertWrapperElem.parent()
+                              parentElem
+                                .find('.new-form-wrapper')
+                                .html('<p><a target="_blank" href="/new/'+data_3.new_hh_id+'">'+data_3.hero+'</a></p>')
+                            }
+                          },
+                          error: function(err) {
+                            console.error(err);
+                          },
+                          dataType: 'json'
+                        })
+                      });
                     }
                   },
                   error: function(err) {
-                    console.log(err);
+                    console.error(err);
                   },
                   dataType: 'json'
                 });
-              });
-
-              var formWrapperElem = $('<div/>')
-                                      .addClass('col-sm-4')
-                                      .addClass('new-form-wrapper')
-                                      .append(newSelectElem)
-                                      .append(newButtonElem);
-
-              outerElem.append(formWrapperElem);
-            }
-          },
-          dataType: 'json'
-        });
-      } else {
-        convertElem.html('<p>Error</p>');
-      }
-    }
-
-    function error(err) {
-      console.log(err);
-    }
+              }
+            },
+            error: function(err) {
+              console.error(err);
+            },
+            dataType: 'json'
+          });
+        }
+        else{
+          alert("Could not upload file.");
+        }
+     }
+    };
   }
 });

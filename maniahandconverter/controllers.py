@@ -1,14 +1,138 @@
 from django.conf import settings
 from django.core.files.storage import default_storage
 
-from .converters import create_hh_object, parse_hh_json, create_new_hh
-from .models import HH, Player, Game, HHJson_Player, HHJson_Player_Game, HHJson, HHNew
-from .forms import HHForm
+from .converter import hh_to_object
+from .converters import create_new_hh_text, create_hh_details
+from .models import (
+    HH,
+    Player,
+    Game,
+    HHJson_Player,
+    HHJson_Player_Game,
+    HHJson,
+    HHNew
+)
 
 import boto3
-import time, json
+import time, json, os, boto3
 
-def save_hh_models(hh_json, hh_obj):
+HH_LOCATION = settings.AWS_HH_LOCATION
+S3_BUCKET = settings.AWS_STORAGE_BUCKET_NAME
+S3_DOMAIN = settings.AWS_S3_CUSTOM_DOMAIN
+
+def handle_get_hh(hhjson_id):
+    hhjson = HHJson.objects.get(id=hhjson_id)
+    return get_hh_text_from_s3(hhjson.hh.path)
+
+def handle_get_new_hh(new_hh_id):
+    new_hh = HHNew.objects.get(id=new_hh_id)
+    return new_hh.file.read()
+
+def handle_get_hh_obj(hhjson_id):
+    hhjson = HHJson.objects.get(id=hhjson_id)
+    hh_obj = parse_hh_json(hhjson.file)
+    return create_hh_details(hh_obj)
+
+def handle_history_detail(hero_id):
+    hh_json_player = HHJson_Player.objects.get(id=hero_id)
+    hero = hh_json_player.player.name
+    hh_json = hh_json_player.hh_json
+
+    if len(HHNew.objects.filter(hero=hero, hh_json=hh_json)) > 0:
+        return { 'is_valid': False }
+    else:
+        return handle_convert(hh_json.id, hero)
+
+
+def handle_sign_s3(file_name, file_type, file_size, ext):
+    hh              = create_hh_model(file_name, file_type, file_size, ext)
+    presigned_post  = create_s3_signature(hh.path, file_type)
+    return {
+        'data': presigned_post,
+        'hh_id': hh.id,
+        'url': '{}/{}'.format(S3_DOMAIN, hh.path)
+    }
+
+def handle_fileupload_1(hh_id, key):
+    hh      = update_hh_model(hh_id)
+    hh_text = get_hh_text_from_s3(key)
+    hh_obj  = hh_to_object.init(hh_text)
+    hh_json = create_hh_json_model(hh_obj, hh)
+    return {
+        'is_valid': True,
+        'hh_json_id': hh_json.id,
+    }
+
+def handle_fileupload_2(hh_json_id):
+    hh_json = HHJson.objects.get(id=hh_json_id)
+    hh_obj  = parse_hh_json(hh_json.file)
+    create_rest_of_models(hh_json, hh_obj)
+    return {
+        'is_valid': True,
+        'players': hh_obj['players']
+    }
+
+def handle_convert(hh_json_id, hero):
+    hh_json = HHJson.objects.get(id=hh_json_id)
+    new_hh = create_new_hh_model(hh_json, hero)
+    return {
+        'is_valid': True,
+        'hero': hero,
+        'new_hh_id': new_hh.id
+    }
+
+#############################
+##### S3 HELPER METHODS #####
+#############################
+
+def create_s3_signature(hh_path, file_type):
+    s3 = boto3.client('s3')
+    return s3.generate_presigned_post(
+        Bucket = S3_BUCKET,
+        Key = hh_path,
+        Fields = {"acl": "private", "Content-Type": file_type},
+        Conditions = [
+            {"acl": "private"},
+            {"Content-Type": file_type}
+        ],
+        ExpiresIn = 3600
+    )
+
+def get_hh_text_from_s3(key):
+    s3 = boto3.resource('s3')
+    hh_s3 = s3.Object(S3_BUCKET, key)
+    hh_text = hh_s3.get()['Body'].read().decode('utf-8')
+    return hh_text
+
+################################
+##### Model HELPER METHODS #####
+################################
+
+# hh.path is (:path)/(:id).txt
+def create_hh_model(file_name, file_type, file_size, ext):
+    hh = HH.objects.create(name=file_name, file_type=file_type, size=file_size)
+    hh.save()
+    hh.path = "{}/{}{}".format(HH_LOCATION, str(hh.id), ext)
+    hh.save()
+    return hh
+
+def update_hh_model(hh_id):
+    hh = HH.objects.get(id=hh_id)
+    hh.uploaded = True
+    hh.save()
+    return hh
+
+def create_hh_json_model(hh_obj, hh):
+    json_text = json.dumps(hh_obj)
+
+    file = default_storage.open(hh.name, 'w')
+    file.write(json_text)
+
+    hh_json = HHJson(hh=hh, file=file)
+    hh_json.save()
+    return hh_json
+
+def create_rest_of_models(hh_json, hh_obj):
     hh = hh_json.hh
     games = {}
     players = {}
@@ -36,109 +160,23 @@ def save_hh_models(hh_json, hh_obj):
             hh_json_player_game = HHJson_Player_Game(hh_json_player=hh_json_player,game=games[g],amount=amount,count=count,sit=sit)
             hh_json_player_game.save()
 
-    # for h in hh_obj['hands']:
-    #     v = h['details']
-    #     hand = Hand(
-    #         game        = games[v['game']],
-    #         hand_number = v['hand_number'],
-    #         date_played = v['date'],
-    #         time_played = v['time'],
-    #         sb          = v['sb'],
-    #         bb          = v['bb'],
-    #         ante        = v['ante'],
-    #         table       = v['table'],
-    #         blind_type  = v['blind_type'],
-    #         rake        = v['rake'],
-    #         pot         = v['pot'],
-    #         sitting     = v['sitting'],
-    #         dealt       = v['dealt'],
-    #         body        = v['body'],
-    #     )
-    #     hand.save()
-
-    #     for p in v['players']:
-    #         hh_player = Hand_Player(
-    #             hand    = hand,
-    #             player  = players[p],
-    #             amount  = v['players'][p]['result'],
-    #             sitting = v['players'][p]['is_sitting']
-    #         )
-    #         hh_player.save()
-
-    # d = time.time()
-    # print('next database time:', d - c)
-
-def save_json_file(hh, hh_obj):
-    file = default_storage.open(hh.file.name, 'w')
-    json_text = json.dumps(hh_obj)
-    file.write(json_text)
-    hh_json = HHJson(hh=hh, file=file)
-    hh_json.save()
-    return hh_json
-
-def save_new_hh(hh_json, hero):
+def create_new_hh_model(hh_json, hero):
     hh_obj = parse_hh_json(hh_json.file)
-    new_hh_text = create_new_hh(hh_obj, hero)
+    new_hh_text = create_new_hh_text(hh_obj, hero)
 
-    file = default_storage.open(hh_json.hh.file.name, 'w')
+    file = default_storage.open(hh_json.file.name, 'w')
     file.write(new_hh_text)
 
     new_hh = HHNew(hh_json=hh_json, file=file, hero=hero)
     new_hh.save()
     return new_hh
 
-def handle_hh_file(self, request, csrf, data):
-    hhForm = HHForm(self.request.POST, self.request.FILES)
-    if hhForm.is_valid() == True:
-        a = time.time()
-        hh = hhForm.save()
-        b = time.time()
-        print('post1: ', b - a)
-        data['is_valid'] = True
-        data['hh_id'] = hh.id
-        data['csrf'] = csrf
+################################
+##### Other HELPER METHODS #####
+################################
 
-def handle_hh_obj(self, request, csrf, hh_id, data):
-    hh = HH.objects.get(id=hh_id)
-    a = time.time()
-    hh_obj = create_hh_object(hh)
-    b = time.time()
-    print('post2a: ', b - a)
-    hh_json = save_json_file(hh, hh_obj)
-    c = time.time()
-    print('post2b: ', c - b)
-    data['is_valid'] = True
-    data['csrf'] = csrf
-    data['hh_json_id'] = hh_json.id
-
-def handle_hh_models(self, request, csrf, hh_json_id, data):
-    hh_json = HHJson.objects.get(id=hh_json_id)
-    a = time.time()
-    hh_obj = parse_hh_json(hh_json.file)
-    save_hh_models(hh_json, hh_obj)
-    b = time.time()
-    print('post3: ', b - a)
-    data['is_valid'] = True
-    data['csrf'] = csrf
-    data['players'] = hh_obj['players']
-    data['hh_json_id'] = hh_json.id
-
-def handle_new_hh_history(self, request, csrf, hh_json_id, hero, data):
-    hh_json = HHJson.objects.get(id=hh_json_id)
-
-    new_hh = save_new_hh(hh_json, hero)
-    data['hero'] = hero
-    data['is_valid'] = True
-    data['new_hh_id'] = new_hh.id
-
-def handle_new_hh_detail(hero_id, hh_id, data):
-    hh_json_player = HHJson_Player.objects.get(id=hero_id)
-    hh_json = hh_json_player.hh_json
-
-    if len(HHNew.objects.filter(hero=hh_json_player.player.name, hh_json=hh_json)) > 0:
-        data['is_valid'] = False
-    else:
-        new_hh = save_new_hh(hh_json, hh_json_player.player.name)
-        data['is_valid'] = True
-        data['hero'] = hh_json_player.player.name
-        data['new_hh_id'] = new_hh.id
+def parse_hh_json(file):
+    byte_text = file.read()
+    string = byte_text.decode('utf-8')
+    hh_obj = json.loads(string)
+    return hh_obj

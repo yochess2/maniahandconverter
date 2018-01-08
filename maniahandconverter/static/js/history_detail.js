@@ -1,14 +1,14 @@
 $(function() {
   var csrf_token = $('meta[name="csrf-token"]').attr('content');
   var $select = $('select');
-  var $hhId = $('#hh-id');
+  var $hhjsonId = $('#hhjson-id');
   var $list = $('.converted-file-list');
   var $message = $('#message')
   $('button').on('click', function(evt) {
     evt.preventDefault();
     $.ajax({
       type: 'POST',
-      url: window.location.origin + '/history/' + $hhId.html() + '/',
+      url: window.location.origin + '/history/' + $hhjsonId.html() + '/',
       data: {
         csrfmiddlewaretoken: csrf_token,
         hero_id: $select.val()

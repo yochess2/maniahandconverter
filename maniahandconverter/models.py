@@ -1,5 +1,5 @@
 from django.db import models
-from mhc.storage_backend import HhStorage, JsonStorage, ConvertedStorage
+from mhc.storage_backend import JsonStorage, ConvertedStorage
 
 class HH(models.Model):
     name        = models.CharField(max_length=120, null=True, blank=True)
