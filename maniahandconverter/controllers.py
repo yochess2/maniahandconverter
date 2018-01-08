@@ -168,8 +168,9 @@ def create_rest_of_models(hh_json, hh_obj):
 def create_new_hh_model(hh_json, hero):
     hh_obj = parse_hh_json(hh_json.file)
     new_hh_text = create_new_hh_text(hh_obj, hero)
+    file_name = "{}_{}.txt".format(hh_json.hh.id, hero)
 
-    file = default_storage.open(hh_json.file.name, 'w')
+    file = default_storage.open(file_name, 'w')
     file.write(new_hh_text)
 
     new_hh = HHNew(hh_json=hh_json, file=file, hero=hero)
