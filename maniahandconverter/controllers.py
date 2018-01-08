@@ -128,8 +128,9 @@ def update_hh_model(hh_id):
 
 def create_hh_json_model(hh_obj, hh):
     json_text = json.dumps(hh_obj)
+    file_name = "{}.txt".format(hh.id)
 
-    file = default_storage.open(hh.name, 'w')
+    file = default_storage.open(file_name, 'w')
     file.write(json_text)
 
     hh_json = HHJson(hh=hh, file=file)
