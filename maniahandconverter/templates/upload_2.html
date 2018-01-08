@@ -3,6 +3,7 @@
 {% block title %}<title>Upload HHs</title>{% endblock %}
 
 {% block javascript %}
+  <meta name="csrf-token" content="{{csrf_token}}">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.19.2/js/vendor/jquery.ui.widget.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.19.2/js/jquery.fileupload.min.js"></script>
   {% load static %}
@@ -17,9 +18,7 @@
   <span>Select HHs</span>
 </button>
 
-  <input id="fileupload" type="file" name="file" multiple
-         data-url="{% url 'file-upload' %}" style="display: none;"
-         data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
+<input id="fileupload" type="file" name="file" multiple style="display: none;">
 
 <div class="table selected-hhs-wrapper">
   <h4>Selected Hand Histories</h4>

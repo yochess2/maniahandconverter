@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import render
 from django.views import View, generic
 from django.http import JsonResponse, HttpResponse
@@ -5,7 +6,7 @@ from django.core.files import File
 
 from .converters import create_hh_object, create_hh_details, parse_hh_json
 from .controllers import save_hh_models, handle_hh_file, handle_hh_obj, handle_hh_models, handle_new_hh_history, handle_new_hh_detail
-from .models import HH, HHJson, HHNew, HHJson_Player
+from .models import HH, HHJson, HHNew, HHJson_Player, HH2
 
 import time, json, boto3, os
 
@@ -75,26 +76,40 @@ def get_new_hh(request, **kwargs):
     return HttpResponse(new_hh.file.read(), content_type='text/plain')
 
 def sign_s3(request, **kwargs):
+    S3_BUCKET       = settings.AWS_STORAGE_BUCKET_NAME
+    HH_LOCATION     = settings.AWS_HH_LOCATION
+    file_name       = request.GET.get('file_name')
+    file_type       = request.GET.get('file_type')
+    file_size       = request.GET.get('file_size')
+    file_path, ext  = os.path.splitext(file_name)
 
-    S3_BUCKET = os.environ.get('S3_BUCKET')
-    file_name = request.GET.get('file_name')
-    file_type = request.GET.get('file_type')
+    if ext != '.txt':
+        return HttpResponse({'message':'Please use .txt'}, status=403)
 
-    s3 = boto3.client('s3')
+    hh2 = HH2.objects.create(name=file_name,file_type=file_type,size=file_size)
+
+    upload_path     = "{}/{}{}".format(HH_LOCATION, str(hh2.id), ext)
+    hh2.path        = upload_path
+    hh2.save()
+    s3              = boto3.client('s3')
+
     presigned_post = s3.generate_presigned_post(
         Bucket = S3_BUCKET,
         Key = file_name,
         Fields = {"acl": "public-read", "Content-Type": file_type},
         Conditions = [
-          {"acl": "public-read"},
-          {"Content-Type": file_type}
+            {"acl": "public-read"},
+            {"Content-Type": file_type}
         ],
         ExpiresIn = 3600
     )
+
+
     data = json.dumps({
         'data': presigned_post,
-        'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name)
+        'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, upload_path)
     })
+
     return HttpResponse(data, content_type="application/json")
 
 class FileUploadView_2(View):
@@ -102,6 +117,13 @@ class FileUploadView_2(View):
         return render(self.request, 'upload_2.html')
 
     def post(self, request):
-        data = {};
+        s3 = boto3.resource('s3')
+        key = self.request.POST.get('key')
 
+
+        obj = s3.Object(settings.AWS_STORAGE_BUCKET_NAME, key)
+        print(obj)
+        text = obj.get()['Body'].read().decode('utf-8')
+        data = {};
         return JsonResponse(data)
+

@@ -24,8 +24,8 @@ $(function() {
                                   .val('Upload')
                                   .click(function() {
                                     file = data.files[0];
-                                    convertElem.replaceWith('<p>Uploading...</p>');
-                                    getSignedRequest(file);
+                                    convertElem.replaceWith('<p>Processing...</p>');
+                                    getSignedRequest(file, convertWrapperElem, outerElem);
                                   });
 
     var convertWrapperElem  =   $('<div/>')
@@ -42,15 +42,16 @@ $(function() {
 
   }
 
-  function getSignedRequest(file){
+  function getSignedRequest(file, convertWrapperElem, outerElem){
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "/sign_s3?file_name="+file.name+"&file_type="+file.type);
+    xhr.open("GET", "/sign_s3?file_name="+file.name+"&file_type="+file.type+"&file_size="+file.size);
+
     xhr.onreadystatechange = function(){
       if(xhr.readyState === 4){
         if(xhr.status === 200){
           var response = JSON.parse(xhr.responseText);
-          console.log(response)
-          uploadFile(file, response.data, response.url);
+          convertWrapperElem.children().html('Uploading...');
+          uploadFile(file, response.data, response.url, convertWrapperElem, outerElem);
         }
         else{
           alert("Could not get signed URL.");
@@ -60,20 +61,32 @@ $(function() {
     xhr.send();
   }
 
-  function uploadFile(file, s3Data, url){
+  function uploadFile(file, s3Data, url, convertWrapperElem, outerElem){
     var xhr = new XMLHttpRequest();
     xhr.open("POST", s3Data.url);
-
     var postData = new FormData();
     for(key in s3Data.fields){
       postData.append(key, s3Data.fields[key]);
     }
     postData.append('file', file);
-
     xhr.onreadystatechange = function() {
       if(xhr.readyState === 4){
         if(xhr.status === 200 || xhr.status === 204){
-          console.log('success', url);
+          convertWrapperElem.children().html('Syncing...');
+          var csrf_token = $('meta[name="csrf-token"]').attr('content');
+          $.ajax({
+            type: 'POST',
+            url: window.location.href,
+            data: {
+              csrfmiddlewaretoken: csrf_token,
+              key: s3Data.fields.key
+            },
+            success: function() {
+              console.log('ook at you go!');
+            },
+            error: function() {},
+            dataType: 'json'
+          });
         }
         else{
           alert("Could not upload file.");

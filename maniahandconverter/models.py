@@ -11,6 +11,15 @@ class HH(models.Model):
     def __str__(self):
         return self.file.name
 
+class HH2(models.Model):
+    name        = models.CharField(max_length=120, null=True, blank=True)
+    file_type   = models.CharField(max_length=120, null=True, blank=True)
+    path        = models.TextField(blank=True, null=True)
+    size        = models.BigIntegerField(default=0)
+    uploaded    = models.BooleanField(default=False)
+    active      = models.BooleanField(default=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
 class HHJson(models.Model):
     hh          = models.ForeignKey('HH', null=True, on_delete=models.SET_NULL)
     file        = models.FileField(storage=JsonStorage())
