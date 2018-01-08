@@ -8,6 +8,7 @@ from .controllers import (
     handle_get_new_hh,
     handle_get_hh_obj,
     handle_history_detail,
+    handle_delete,
     handle_sign_s3,
     handle_fileupload_1,
     handle_fileupload_2,
@@ -32,15 +33,20 @@ class HistoryView(generic.ListView):
     model = HHJson
     paginate_by = 20
     template_name = 'history.html'
+    queryset = HHJson.objects.filter(hh__active=True)
 
 class HistoryDetailView(generic.DetailView):
     model = HHJson
     template_name = 'history_detail.html'
+    queryset = HHJson.objects.filter(hh__active=True)
 
     def post(self, reqeust, **kwargs):
         hero_id = self.request.POST.get('hero_id')
         data = handle_history_detail(hero_id)
         return JsonResponse(data)
+
+    def put(self, request, **kwargs):
+        return JsonResponse(handle_delete(kwargs['pk']))
 
 # after User clicks upload, hh model is created, and
 #   - path is local/unconverted in production, and

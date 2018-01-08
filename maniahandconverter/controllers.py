@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.files.storage import default_storage
+from django.shortcuts import get_object_or_404
 
 from .converter import hh_to_object
 from .converters import create_new_hh_text, create_hh_details
@@ -21,28 +22,41 @@ S3_BUCKET = settings.AWS_STORAGE_BUCKET_NAME
 S3_DOMAIN = settings.AWS_S3_CUSTOM_DOMAIN
 
 def handle_get_hh(hhjson_id):
-    hhjson = HHJson.objects.get(id=hhjson_id)
+    hhjson = get_object_or_404(HHJson, id=hhjson_id)
+    get_object_or_404(HH, id=hhjson.hh.id)
     return get_hh_text_from_s3(hhjson.hh.path)
 
 def handle_get_new_hh(new_hh_id):
+    new_hh = get_object_or_404(HHNew, id=new_hh_id)
+    get_object_or_404(HH, id=new_hh.hh_json.hh.id)
     new_hh = HHNew.objects.get(id=new_hh_id)
     return new_hh.file.read()
 
 def handle_get_hh_obj(hhjson_id):
-    hhjson = HHJson.objects.get(id=hhjson_id)
+    hhjson = get_object_or_404(HHJson, id=hhjson_id)
+    get_object_or_404(HH, id=hhjson.hh.id)
     hh_obj = parse_hh_json(hhjson.file)
     return create_hh_details(hh_obj)
 
 def handle_history_detail(hero_id):
-    hh_json_player = HHJson_Player.objects.get(id=hero_id)
+    hh_json_player = get_object_or_404(HHJson_Player, id=hero_id)
     hero = hh_json_player.player.name
     hh_json = hh_json_player.hh_json
+    get_object_or_404(HH, id=hh_json.hh.id)
 
-    if len(HHNew.objects.filter(hero=hero, hh_json=hh_json)) > 0:
+    if HHNew.objects.filter(hero=hero, hh_json=hh_json).exists():
         return { 'is_valid': False }
     else:
         return handle_convert(hh_json.id, hero)
 
+def handle_delete(hh_json_id):
+    hh_json = get_object_or_404(HHJson, id=hh_json_id)
+    get_object_or_404(HH, id=hh_json.hh.id)
+    hh_json.hh.active = False
+    hh_json.hh.save()
+    return {
+        'is_valid': True
+    }
 
 def handle_sign_s3(file_name, file_type, file_size, ext):
     if ext != '.txt':
@@ -77,7 +91,8 @@ def handle_fileupload_2(hh_json_id):
     }
 
 def handle_convert(hh_json_id, hero):
-    hh_json = HHJson.objects.get(id=hh_json_id)
+    hh_json = get_object_or_404(HHJson, id=hh_json_id)
+    get_object_or_404(HH, id=hh_json.hh.id)
     new_hh = create_new_hh_model(hh_json, hero)
     return {
         'is_valid': True,
@@ -114,14 +129,14 @@ def get_hh_text_from_s3(key):
 
 # hh.path is (:path)/(:id).txt
 def create_hh_model(file_name, file_type, file_size, ext):
-    hh = HH.objects.create(name=file_name, file_type=file_type, size=file_size)
+    hh = HH.active_items.create(name=file_name, file_type=file_type, size=file_size)
     hh.save()
     hh.path = "{}/{}{}".format(HH_LOCATION, str(hh.id), ext)
     hh.save()
     return hh
 
 def update_hh_model(hh_id):
-    hh = HH.objects.get(id=hh_id)
+    hh = get_object_or_404(HH, id=hh_id)
     hh.uploaded = True
     hh.save()
     return hh
@@ -162,7 +177,13 @@ def create_rest_of_models(hh_json, hh_obj):
             amount = hh_obj['players'][p]['games'][g]['amount']
             count = hh_obj['players'][p]['games'][g]['count']
             sit = hh_obj['players'][p]['games'][g]['sit']
-            hh_json_player_game = HHJson_Player_Game(hh_json_player=hh_json_player,game=games[g],amount=amount,count=count,sit=sit)
+            hh_json_player_game = HHJson_Player_Game(
+                hh_json_player=hh_json_player,
+                game=games[g],
+                amount=amount,
+                count=count,
+                sit=sit
+            )
             hh_json_player_game.save()
 
 def create_new_hh_model(hh_json, hero):

@@ -1,14 +1,19 @@
 from django.db import models
 from mhc.storage_backend import JsonStorage, ConvertedStorage
 
+class HHManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(active=True)
+
 class HH(models.Model):
-    name        = models.CharField(max_length=120, null=True, blank=True)
-    file_type   = models.CharField(max_length=120, null=True, blank=True)
-    path        = models.TextField(blank=True, null=True)
-    size        = models.BigIntegerField(default=0)
-    uploaded    = models.BooleanField(default=False)
-    active      = models.BooleanField(default=True)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+    name         = models.CharField(max_length=120, null=True, blank=True)
+    file_type    = models.CharField(max_length=120, null=True, blank=True)
+    path         = models.TextField(blank=True, null=True)
+    size         = models.BigIntegerField(default=0)
+    uploaded     = models.BooleanField(default=False)
+    active       = models.BooleanField(default=True)
+    uploaded_at  = models.DateTimeField(auto_now_add=True)
+    active_items = HHManager()
 
     class Meta:
         ordering = ["-uploaded_at"]

@@ -12,8 +12,7 @@
 
 
 {% block content %}
-<h2>Details</h2>
-<span>{{hhjson.hh}}</span>
+<h2>{{hhjson.hh}} <button class="delete-all btn btn-danger">Delete</a></button></h2>
 
 <div class="history-detail-original">
   <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
@@ -41,7 +40,7 @@
         <option value="{{hh_player.id}}">{{hh_player.player.name}}</option>
         {% endfor %}
       </select>
-      <button class="btn btn-primary btn-sm">
+      <button class="btn btn-primary btn-sm add-button">
         <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
       </button>
     </form>

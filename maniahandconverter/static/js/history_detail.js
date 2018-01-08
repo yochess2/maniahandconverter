@@ -3,11 +3,33 @@ $(function() {
   var hhjsonId = $('meta[name="hhjson-id"]').attr('content');
   var $select = $('select');
   var $list = $('.converted-file-list');
-  var $message = $('#message')
-  $('button').on('click', function(evt) {
+  var $message = $('#message');
+
+  $('.delete-all').on('click', function(evt) {
+    var $button = $(this);
+    will_delete = confirm('Are you sure?');
+    if(will_delete) {
+      $.ajax({
+        type: 'PUT',
+        url: window.location.origin + '/history/' + hhjsonId + '/',
+        beforeSend:function(xhr){
+          xhr.setRequestHeader("X-CSRFToken", csrf_token);
+        },
+        success: function(data) {
+          console.log('cool');
+        },
+        error: function(err) {
+          console.log(err);
+        },
+        dataType: 'json'
+      });
+    }
+  });
+
+
+  $('.add-button').on('click', function(evt) {
     var $button = $(this);
     $button.attr('disabled','disabled');
-    evt.preventDefault();
     $.ajax({
       type: 'POST',
       url: window.location.origin + '/history/' + hhjsonId + '/',
