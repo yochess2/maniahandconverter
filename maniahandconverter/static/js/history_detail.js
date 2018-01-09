@@ -6,6 +6,7 @@ $(function() {
   var $message = $('#message');
 
   $('.delete-all').on('click', function(evt) {
+    evt.preventDefault();
     var $button = $(this);
     will_delete = confirm('Are you sure?');
     if(will_delete) {
@@ -16,7 +17,7 @@ $(function() {
           xhr.setRequestHeader("X-CSRFToken", csrf_token);
         },
         success: function(data) {
-          console.log('cool');
+          window.location.replace(location.origin)
         },
         error: function(err) {
           console.log(err);
@@ -28,6 +29,7 @@ $(function() {
 
 
   $('.add-button').on('click', function(evt) {
+    evt.preventDefault();
     var $button = $(this);
     $button.attr('disabled','disabled');
     $.ajax({

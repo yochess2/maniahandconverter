@@ -4,7 +4,8 @@
 //   2. the file is then uploaded to s3 from the frontend
 //   3. another request is made to the backend to create a HH Object
 $(function() {
-  $(".js-upload-hhs").click(function () {
+  $(".js-upload-hhs").click(function (evt) {
+    evt.preventDefault();
     $("#fileupload").click();
   });
 
@@ -57,7 +58,8 @@ $(function() {
                                   .addClass('btn')
                                   .addClass('btn-primary')
                                   .html('Upload')
-                                  .click(function() {
+                                  .click(function(evt) {
+                                    evt.preventDefault();
                                     file = data.files[0];
                                     convertElem.replaceWith('<p>Getting Signature... 1/4</p>');
                                     getSignedRequest(file, convertWrapperElem, outerElem);
@@ -161,7 +163,8 @@ $(function() {
                         .addClass('new-convert-button')
                         .val('Convert')
 
-                      newButtonElem.click(function() {
+                      newButtonElem.click(function(evt) {
+                        evt.preventDefault();
                         var parentElem = convertWrapperElem.parent()
                         formWrapperElem.html('<p>Converting...</p>');
                         $.ajax({
