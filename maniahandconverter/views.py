@@ -7,12 +7,12 @@ from .controllers import (
     handle_get_hh,
     handle_get_new_hh,
     handle_get_hh_obj,
-    handle_history_detail,
+    handle_create_new_hh,
     handle_delete,
     handle_sign_s3,
-    handle_fileupload_1,
-    handle_fileupload_2,
-    handle_convert,
+    handle_create_hh_json,
+    handle_create_all_models,
+    handle_create_more_new_hh,
 )
 
 import os
@@ -42,7 +42,7 @@ class HistoryDetailView(generic.DetailView):
 
     def post(self, reqeust, **kwargs):
         hero_id = self.request.POST.get('hero_id')
-        data = handle_history_detail(hero_id)
+        data = handle_create_new_hh(hero_id)
         return JsonResponse(data)
 
     def put(self, request, **kwargs):
@@ -75,7 +75,7 @@ class FileUploadView(View):
         if post_type == "sync1":
             hh_id       = self.request.POST.get('hh_id')
             key         = self.request.POST.get('key')
-            data        = handle_fileupload_1(hh_id, key)
+            data        = handle_create_hh_json(hh_id, key)
         # After hh object is saved, models are created:
         #   1. player models
         #   2. game models
@@ -83,7 +83,7 @@ class FileUploadView(View):
         #   4. hhjson_player_game models
         elif post_type == "sync2":
             hh_json_id  = self.request.POST.get('hh_json_id')
-            data        = handle_fileupload_2(hh_json_id)
+            data        = handle_create_all_models(hh_json_id)
 
         # If all goes well, user ships in a hero parameter,
         #   then a converted file is created
@@ -91,6 +91,6 @@ class FileUploadView(View):
         elif post_type == "convert":
             hh_json_id  = self.request.POST.get('hh_json_id')
             hero        = self.request.POST.get('hero')
-            data        = handle_convert(hh_json_id, hero)
+            data        = handle_create_more_new_hh(hh_json_id, hero)
 
         return JsonResponse(data)

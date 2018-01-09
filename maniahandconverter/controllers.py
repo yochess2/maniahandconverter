@@ -14,8 +14,7 @@ from .models import (
     HHNew
 )
 
-import boto3
-import time, json, os, boto3
+import json, boto3
 
 HH_LOCATION = settings.AWS_HH_LOCATION
 S3_BUCKET = settings.AWS_STORAGE_BUCKET_NAME
@@ -38,7 +37,7 @@ def handle_get_hh_obj(hhjson_id):
     hh_obj = parse_hh_json(hhjson.file)
     return create_hh_details(hh_obj)
 
-def handle_history_detail(hero_id):
+def handle_create_new_hh(hero_id):
     hh_json_player = get_object_or_404(HHJson_Player, id=hero_id)
     hero = hh_json_player.player.name
     hh_json = hh_json_player.hh_json
@@ -47,7 +46,7 @@ def handle_history_detail(hero_id):
     if HHNew.objects.filter(hero=hero, hh_json=hh_json).exists():
         return { 'is_valid': False }
     else:
-        return handle_convert(hh_json.id, hero)
+        return handle_create_more_new_hh(hh_json.id, hero)
 
 def handle_delete(hh_json_id):
     hh_json = get_object_or_404(HHJson, id=hh_json_id)
@@ -71,7 +70,7 @@ def handle_sign_s3(file_name, file_type, file_size, ext):
         'url': '{}/{}'.format(S3_DOMAIN, hh.path)
     }
 
-def handle_fileupload_1(hh_id, key):
+def handle_create_hh_json(hh_id, key):
     hh      = update_hh_model(hh_id)
     hh_text = get_hh_text_from_s3(key)
     hh_obj  = hh_to_object.init(hh_text)
@@ -81,7 +80,7 @@ def handle_fileupload_1(hh_id, key):
         'hh_json_id': hh_json.id,
     }
 
-def handle_fileupload_2(hh_json_id):
+def handle_create_all_models(hh_json_id):
     hh_json = HHJson.objects.get(id=hh_json_id)
     hh_obj  = parse_hh_json(hh_json.file)
     create_rest_of_models(hh_json, hh_obj)
@@ -90,7 +89,7 @@ def handle_fileupload_2(hh_json_id):
         'players': hh_obj['players']
     }
 
-def handle_convert(hh_json_id, hero):
+def handle_create_more_new_hh(hh_json_id, hero):
     hh_json = get_object_or_404(HHJson, id=hh_json_id)
     get_object_or_404(HH, id=hh_json.hh.id)
     new_hh = create_new_hh_model(hh_json, hero)
