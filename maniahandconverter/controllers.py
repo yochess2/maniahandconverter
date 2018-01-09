@@ -61,6 +61,9 @@ def handle_sign_s3(file_name, file_type, file_size, ext):
     if ext != '.txt':
         return {'is_valid': False,'message': 'Not a .txt file'}
 
+    if int(file_size) > 999000:
+        return {'is_valid': False, 'message': 'File must be under 1MB'}
+
     hh              = create_hh_model(file_name, file_type, file_size, ext)
     presigned_post  = create_s3_signature(hh.path, file_type)
     return {

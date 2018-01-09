@@ -13,15 +13,43 @@ $(function() {
     add: add,
   });
 
+  var format_size = function(file_size) {
+    var size = parseInt(file_size/1000)
+    var color = file_size > 999000 ? 'red' : 'green';
+
+    return "<b>size:</b> <span style='color:"+color+"'>"+size +" kb</span>";
+  }
+
+  var get_ext = function(filename) {
+    var fs = filename.split('.');
+    if(filename.length === fs[0].length) {
+      return "";
+    } else {
+      return fs[fs.length-1];
+    }
+  }
+
+  var format_ext = function(ext) {
+    if(ext === "txt") {
+      return "<b>extension</b>: txt";
+    } else if(ext === "") {
+      return "<b>extension</b>: <span style='color:red;'>NONE</span>"
+    } else {
+      return "<b>extension</b>: <span style='color:red;'>"+ext+"</span"
+    }
+  }
+
   function add(e, data) {
     var filename            =   data.files[0].name;
+    var file_size           =   data.files[0].size;
 
     var fileElem            =   $('<p/>')
                                   .addClass('hh-name')
-                                  .text(filename);
+                                  .text(filename)
+                                  .append('<p>'+format_size(file_size)+' | '+format_ext(get_ext(filename))+'</p>')
 
     var fileWrapperElem     =   $('<div/>')
-                                  .addClass('col-sm-4')
+                                  .addClass('col-sm-5')
                                   .addClass('hh-wrapper')
                                   .append(fileElem);
     var convertElem         =   $('<button/>')
@@ -61,7 +89,7 @@ $(function() {
             convertWrapperElem.children().html('Uploading File... 2/4');
             uploadFile(file, response.data, response.url, response.hh_id, convertWrapperElem, outerElem);
           } else {
-            convertWrapperElem.children().html('File needs to end in .txt');
+            convertWrapperElem.children().html(response.message);
           }
         }
         else{
@@ -115,7 +143,7 @@ $(function() {
                       var newButtonElem = $('<input type="submit"/>');
 
                       formWrapperElem
-                        .addClass('col-sm-5')
+                        .addClass('col-sm-4')
                         .addClass('new-form-wrapper')
                         .append(newSelectElem)
                         .append(newButtonElem);
