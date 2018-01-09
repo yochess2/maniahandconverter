@@ -24,9 +24,11 @@ $(function() {
                                   .addClass('col-sm-4')
                                   .addClass('hh-wrapper')
                                   .append(fileElem);
-    var convertElem         =   $('<input type="submit"/>')
+    var convertElem         =   $('<button/>')
                                   .addClass('convert-button')
-                                  .val('Upload')
+                                  .addClass('btn')
+                                  .addClass('btn-primary')
+                                  .html('Upload')
                                   .click(function() {
                                     file = data.files[0];
                                     convertElem.replaceWith('<p>Getting Signature... 1/4</p>');
