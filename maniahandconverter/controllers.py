@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.shortcuts import get_object_or_404
-from django.db import transaction
 
 from .converter import hh_to_object
 from .converters import create_new_hh_text, create_hh_details
@@ -12,12 +11,10 @@ from .models import (
     HHJson_Player,
     HHJson_Player_Game,
     HHJson,
-    HHNew,
-    Hand,
-    Hand_Player
+    HHNew
 )
 
-import json, boto3, time
+import json, boto3
 
 HH_LOCATION = settings.AWS_HH_LOCATION
 S3_BUCKET = settings.AWS_STORAGE_BUCKET_NAME
@@ -154,10 +151,7 @@ def create_hh_json_model(hh_obj, hh):
     hh_json.save()
     return hh_json
 
-@transaction.atomic
 def create_rest_of_models(hh_json, hh_obj):
-    print('here')
-    a = time.time()
     hh = hh_json.hh
     games = {}
     players = {}
@@ -190,37 +184,6 @@ def create_rest_of_models(hh_json, hh_obj):
                 sit=sit
             )
             hh_json_player_game.save()
-
-    for h in hh_obj['hands']:
-            v = h['details']
-            hand = Hand(
-                game        = games[v['game']],
-                hand_number = v['hand_number'],
-                date_played = v['date'],
-                time_played = v['time'],
-                sb          = v['sb'],
-                bb          = v['bb'],
-                ante        = v['ante'],
-                table       = v['table'],
-                blind_type  = v['blind_type'],
-                rake        = v['rake'],
-                pot         = v['pot'],
-                sitting     = v['sitting'],
-                dealt       = v['dealt'],
-                body        = v['body'],
-            )
-            hand.save()
-
-            for p in v['players']:
-                hh_player = Hand_Player(
-                    hand    = hand,
-                    player  = players[p],
-                    amount  = v['players'][p]['result'],
-                    sitting = v['players'][p]['is_sitting']
-                )
-            hh_player.save()
-
-    print(time.time() - a)
 
 def create_new_hh_model(hh_json, hero):
     hh_obj = parse_hh_json(hh_json.file)
