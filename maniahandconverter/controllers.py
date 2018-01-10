@@ -14,7 +14,7 @@ from .models import (
     HHNew
 )
 
-import json, boto3
+import json, boto3, uuid
 
 HH_LOCATION = settings.AWS_HH_LOCATION
 S3_BUCKET = settings.AWS_STORAGE_BUCKET_NAME
@@ -113,7 +113,7 @@ def handle_create_more_new_hh(hh_json_id, hero, user):
         return {'is_valid':False, 'message':'Invalid Operation'}
     hh_json = get_object_or_404(HHJson, id=hh_json_id)
     get_object_or_404(HH, id=hh_json.hh.id, user=user)
-    new_hh = create_new_hh_model(hh_json, hero)
+    new_hh = create_new_hh_model(hh_json, hero, user)
     return {
         'is_valid': True,
         'hero': hero,
@@ -151,7 +151,7 @@ def get_hh_text_from_s3(key):
 def create_hh_model(file_name, file_type, file_size, ext, user):
     hh = HH.active_items.create(name=file_name, file_type=file_type, size=file_size, user=user)
     hh.save()
-    hh.path = "{}/{}{}".format(HH_LOCATION, str(hh.id), ext)
+    hh.path = "{}/{}/{}".format(HH_LOCATION, user, str(uuid.uuid1()), ext)
     hh.save()
     return hh
 
@@ -163,7 +163,7 @@ def update_hh_model(hh_id,user):
 
 def create_hh_json_model(hh_obj, hh, user):
     json_text = json.dumps(hh_obj)
-    file_name = "{}/{}.txt".format(user,hh.id)
+    file_name = "{}/{}.txt".format(user,str(uuid.uuid1()))
 
     file = default_storage.open(file_name, 'w')
     file.write(json_text)
@@ -206,10 +206,10 @@ def create_rest_of_models(hh_json, hh_obj):
             )
             hh_json_player_game.save()
 
-def create_new_hh_model(hh_json, hero):
+def create_new_hh_model(hh_json, hero,user):
     hh_obj = parse_hh_json(hh_json.file)
     new_hh_text = create_new_hh_text(hh_obj, hero)
-    file_name = "{}_{}.txt".format(hh_json.hh.id, hero)
+    file_name = "{}/{}.txt".format(user, str(uuid.uuid1()))
 
     file = default_storage.open(file_name, 'w')
     file.write(new_hh_text)

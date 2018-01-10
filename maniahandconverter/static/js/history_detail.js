@@ -17,7 +17,7 @@ $(function() {
           xhr.setRequestHeader("X-CSRFToken", csrf_token);
         },
         success: function(data) {
-          window.location.replace(location.origin)
+          window.location.replace(location.origin + '/history')
         },
         error: function(err) {
           console.log(err);
