@@ -8,8 +8,9 @@ from django.views.generic import RedirectView
 urlpatterns = [
     path('', include('maniahandconverter.urls')),
     path('admin/', admin.site.urls),
+    path('profile/', include('user.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
-    path('accounts/', include('user.urls')),
+    path('accounts/', include('registration.backends.simple.urls')),
 ]
 
 if settings.DEBUG == True:
