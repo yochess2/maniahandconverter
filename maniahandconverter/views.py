@@ -2,6 +2,9 @@ from django.shortcuts import render
 from django.views import View, generic
 from django.http import JsonResponse, HttpResponse
 
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 from .models import HH, HHJson, HHNew
 from .controllers import (
     handle_get_hh,
@@ -20,22 +23,25 @@ import os
 def index(request):
     return render(request,'index.html',context={})
 
+@login_required
 def get_hh(request, **kwargs):
     return HttpResponse(handle_get_hh(kwargs['pk']), content_type='text/plain')
 
+@login_required
 def get_new_hh(request, **kwargs):
     return HttpResponse(handle_get_new_hh(kwargs['pk']), content_type='text/plain')
 
+@login_required
 def get_hh_obj(request, **kwargs):
     return HttpResponse(handle_get_hh_obj(kwargs['pk']), content_type='text/plain')
 
-class HistoryView(generic.ListView):
+class HistoryView(LoginRequiredMixin, generic.ListView):
     model = HHJson
     paginate_by = 20
     template_name = 'history.html'
     queryset = HHJson.objects.filter(hh__active=True)
 
-class HistoryDetailView(generic.DetailView):
+class HistoryDetailView(LoginRequiredMixin, generic.DetailView):
     model = HHJson
     template_name = 'history_detail.html'
     queryset = HHJson.objects.filter(hh__active=True)
@@ -53,13 +59,16 @@ class HistoryDetailView(generic.DetailView):
 #   - path is media/unconverted in deployment
 # returns the signature to upload to s3
 def sign_s3(request, **kwargs):
+    if not request.user.is_authenticated:
+        return HttpResponse(status=403)
+
     file_name       = request.GET.get('file_name')
     file_type       = request.GET.get('file_type')
     file_size       = request.GET.get('file_size')
     file_path, ext  = os.path.splitext(file_name)
     return JsonResponse(handle_sign_s3(file_name, file_type, file_size, ext))
 
-class FileUploadView(View):
+class FileUploadView(LoginRequiredMixin, View):
     def get(self, request):
         return render(self.request, 'upload.html')
 
