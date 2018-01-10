@@ -211,6 +211,10 @@ $(function() {
                         parentElem
                           .find('.new-form-wrapper')
                           .html('<p><a target="_blank" href="/new/'+data_3.new_hh_id+'">'+data_3.hero+'</a></p>')
+                      } else {
+                        parentElem
+                          .find('.new-form-wrapper')
+                          .html('<p>Error Converting File</p>')
                       }
                     },
                     error: function(err) {
@@ -228,6 +232,8 @@ $(function() {
             },
             dataType: 'json'
           });
+        } else {
+          convertWrapperElem.children().html('Error Creating Models...')
         }
       },
       error: function(err) {

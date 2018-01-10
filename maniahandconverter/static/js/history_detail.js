@@ -45,7 +45,7 @@ $(function() {
           $list.append('<li><a target="_blank" href="/new/'+ data.new_hh_id +'">'+ data.hero +'</li>')
           $message.html('');
         } else {
-          $message.html('already exists');
+          $message.html(data.message || 'already exists');
         }
       },
       error: function(err) {

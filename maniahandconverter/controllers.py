@@ -20,24 +20,32 @@ HH_LOCATION = settings.AWS_HH_LOCATION
 S3_BUCKET = settings.AWS_STORAGE_BUCKET_NAME
 S3_DOMAIN = settings.AWS_S3_CUSTOM_DOMAIN
 
-def handle_get_hh(hhjson_id):
-    hhjson = get_object_or_404(HHJson, id=hhjson_id)
-    get_object_or_404(HH, id=hhjson.hh.id)
-    return get_hh_text_from_s3(hhjson.hh.path)
+def handle_get_hh(hh_json_id):
+    if not bool(hh_json_id):
+        return {'is_valid':False, 'message':'Invalid Operation'}
+    hh_json = get_object_or_404(HHJson, id=hh_json_id)
+    get_object_or_404(HH, id=hh_json.hh.id)
+    return get_hh_text_from_s3(hh_json.hh.path)
 
 def handle_get_new_hh(new_hh_id):
+    if not bool(new_hh_id):
+        return {'is_valid':False, 'message':'Invalid Operation'}
     new_hh = get_object_or_404(HHNew, id=new_hh_id)
     get_object_or_404(HH, id=new_hh.hh_json.hh.id)
     new_hh = HHNew.objects.get(id=new_hh_id)
     return new_hh.file.read()
 
-def handle_get_hh_obj(hhjson_id):
-    hhjson = get_object_or_404(HHJson, id=hhjson_id)
-    get_object_or_404(HH, id=hhjson.hh.id)
-    hh_obj = parse_hh_json(hhjson.file)
+def handle_get_hh_obj(hh_json_id):
+    if not bool(hh_json_id):
+        return {'is_valid':False, 'message':'Invalid Operation'}
+    hh_json = get_object_or_404(HHJson, id=hh_json_id)
+    get_object_or_404(HH, id=hh_json.hh.id)
+    hh_obj = parse_hh_json(hh_json.file)
     return create_hh_details(hh_obj)
 
 def handle_create_new_hh(hero_id):
+    if not bool(hero_id):
+        return {'is_valid':False, 'message':'Invalid Operation'}
     hh_json_player = get_object_or_404(HHJson_Player, id=hero_id)
     hero = hh_json_player.player.name
     hh_json = hh_json_player.hh_json
@@ -49,6 +57,8 @@ def handle_create_new_hh(hero_id):
         return handle_create_more_new_hh(hh_json.id, hero)
 
 def handle_delete(hh_json_id):
+    if not bool(hh_json_id):
+        return {'is_valid':False, 'message':'Invalid Operation'}
     hh_json = get_object_or_404(HHJson, id=hh_json_id)
     get_object_or_404(HH, id=hh_json.hh.id)
     hh_json.hh.active = False
@@ -74,6 +84,8 @@ def handle_sign_s3(file_name, file_type, file_size, ext):
     }
 
 def handle_create_hh_json(hh_id, key):
+    if not bool(hh_id) or not bool(key):
+        return {'is_valid':False, 'message':'Invalid Operation'}
     hh      = update_hh_model(hh_id)
     hh_text = get_hh_text_from_s3(key)
     hh_obj  = hh_to_object.init(hh_text)
@@ -84,6 +96,8 @@ def handle_create_hh_json(hh_id, key):
     }
 
 def handle_create_all_models(hh_json_id):
+    if not bool(hh_json_id):
+        return {'is_valid':False, 'message':'Invalid Operation'}
     hh_json = HHJson.objects.get(id=hh_json_id)
     hh_obj  = parse_hh_json(hh_json.file)
     create_rest_of_models(hh_json, hh_obj)
@@ -93,6 +107,8 @@ def handle_create_all_models(hh_json_id):
     }
 
 def handle_create_more_new_hh(hh_json_id, hero):
+    if not bool(hh_json_id) or not bool(hero):
+        return {'is_valid':False, 'message':'Invalid Operation'}
     hh_json = get_object_or_404(HHJson, id=hh_json_id)
     get_object_or_404(HH, id=hh_json.hh.id)
     new_hh = create_new_hh_model(hh_json, hero)
