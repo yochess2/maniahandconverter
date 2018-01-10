@@ -20,61 +20,61 @@ HH_LOCATION = settings.AWS_HH_LOCATION
 S3_BUCKET = settings.AWS_STORAGE_BUCKET_NAME
 S3_DOMAIN = settings.AWS_S3_CUSTOM_DOMAIN
 
-def handle_get_hh(hh_json_id):
+def handle_get_hh(hh_json_id, user):
     if not bool(hh_json_id):
         return {'is_valid':False, 'message':'Invalid Operation'}
     hh_json = get_object_or_404(HHJson, id=hh_json_id)
-    get_object_or_404(HH, id=hh_json.hh.id)
+    get_object_or_404(HH, id=hh_json.hh.id,user=user)
     return get_hh_text_from_s3(hh_json.hh.path)
 
-def handle_get_new_hh(new_hh_id):
+def handle_get_new_hh(new_hh_id,user):
     if not bool(new_hh_id):
         return {'is_valid':False, 'message':'Invalid Operation'}
     new_hh = get_object_or_404(HHNew, id=new_hh_id)
-    get_object_or_404(HH, id=new_hh.hh_json.hh.id)
+    get_object_or_404(HH, id=new_hh.hh_json.hh.id,user=user)
     new_hh = HHNew.objects.get(id=new_hh_id)
     return new_hh.file.read()
 
-def handle_get_hh_obj(hh_json_id):
+def handle_get_hh_obj(hh_json_id,user):
     if not bool(hh_json_id):
         return {'is_valid':False, 'message':'Invalid Operation'}
     hh_json = get_object_or_404(HHJson, id=hh_json_id)
-    get_object_or_404(HH, id=hh_json.hh.id)
+    get_object_or_404(HH, id=hh_json.hh.id,user=user)
     hh_obj = parse_hh_json(hh_json.file)
     return create_hh_details(hh_obj)
 
-def handle_create_new_hh(hero_id):
+def handle_create_new_hh(hero_id,user):
     if not bool(hero_id):
         return {'is_valid':False, 'message':'Invalid Operation'}
     hh_json_player = get_object_or_404(HHJson_Player, id=hero_id)
     hero = hh_json_player.player.name
     hh_json = hh_json_player.hh_json
-    get_object_or_404(HH, id=hh_json.hh.id)
+    get_object_or_404(HH, id=hh_json.hh.id,user=user)
 
     if HHNew.objects.filter(hero=hero, hh_json=hh_json).exists():
         return { 'is_valid': False }
     else:
-        return handle_create_more_new_hh(hh_json.id, hero)
+        return handle_create_more_new_hh(hh_json.id, hero,user)
 
-def handle_delete(hh_json_id):
+def handle_delete(hh_json_id,user):
     if not bool(hh_json_id):
         return {'is_valid':False, 'message':'Invalid Operation'}
     hh_json = get_object_or_404(HHJson, id=hh_json_id)
-    get_object_or_404(HH, id=hh_json.hh.id)
+    get_object_or_404(HH, id=hh_json.hh.id,user=user)
     hh_json.hh.active = False
     hh_json.hh.save()
     return {
         'is_valid': True
     }
 
-def handle_sign_s3(file_name, file_type, file_size, ext):
+def handle_sign_s3(file_name, file_type, file_size, ext, user):
     if ext != '.txt':
         return {'is_valid': False,'message': 'Not a .txt file'}
 
     if int(file_size) > 999000:
         return {'is_valid': False, 'message': 'File must be under 1MB'}
 
-    hh              = create_hh_model(file_name, file_type, file_size, ext)
+    hh              = create_hh_model(file_name, file_type, file_size, ext, user)
     presigned_post  = create_s3_signature(hh.path, file_type)
     return {
         'is_valid': True,
@@ -83,22 +83,24 @@ def handle_sign_s3(file_name, file_type, file_size, ext):
         'url': '{}/{}'.format(S3_DOMAIN, hh.path)
     }
 
-def handle_create_hh_json(hh_id, key):
+def handle_create_hh_json(hh_id, key, user):
     if not bool(hh_id) or not bool(key):
         return {'is_valid':False, 'message':'Invalid Operation'}
-    hh      = update_hh_model(hh_id)
+
+    hh      = update_hh_model(hh_id, user)
     hh_text = get_hh_text_from_s3(key)
     hh_obj  = hh_to_object.init(hh_text)
-    hh_json = create_hh_json_model(hh_obj, hh)
+    hh_json = create_hh_json_model(hh_obj, hh, user)
     return {
         'is_valid': True,
         'hh_json_id': hh_json.id,
     }
 
-def handle_create_all_models(hh_json_id):
+def handle_create_all_models(hh_json_id,user):
     if not bool(hh_json_id):
         return {'is_valid':False, 'message':'Invalid Operation'}
-    hh_json = HHJson.objects.get(id=hh_json_id)
+    hh_json = get_object_or_404(HHJson,id=hh_json_id)
+    get_object_or_404(HH,id=hh_json.hh.id,user=user)
     hh_obj  = parse_hh_json(hh_json.file)
     create_rest_of_models(hh_json, hh_obj)
     return {
@@ -106,11 +108,11 @@ def handle_create_all_models(hh_json_id):
         'players': hh_obj['players']
     }
 
-def handle_create_more_new_hh(hh_json_id, hero):
+def handle_create_more_new_hh(hh_json_id, hero, user):
     if not bool(hh_json_id) or not bool(hero):
         return {'is_valid':False, 'message':'Invalid Operation'}
     hh_json = get_object_or_404(HHJson, id=hh_json_id)
-    get_object_or_404(HH, id=hh_json.hh.id)
+    get_object_or_404(HH, id=hh_json.hh.id, user=user)
     new_hh = create_new_hh_model(hh_json, hero)
     return {
         'is_valid': True,
@@ -146,22 +148,22 @@ def get_hh_text_from_s3(key):
 ################################
 
 # hh.path is (:path)/(:id).txt
-def create_hh_model(file_name, file_type, file_size, ext):
-    hh = HH.active_items.create(name=file_name, file_type=file_type, size=file_size)
+def create_hh_model(file_name, file_type, file_size, ext, user):
+    hh = HH.active_items.create(name=file_name, file_type=file_type, size=file_size, user=user)
     hh.save()
     hh.path = "{}/{}{}".format(HH_LOCATION, str(hh.id), ext)
     hh.save()
     return hh
 
-def update_hh_model(hh_id):
-    hh = get_object_or_404(HH, id=hh_id)
+def update_hh_model(hh_id,user):
+    hh = get_object_or_404(HH, id=hh_id,user=user)
     hh.uploaded = True
     hh.save()
     return hh
 
-def create_hh_json_model(hh_obj, hh):
+def create_hh_json_model(hh_obj, hh, user):
     json_text = json.dumps(hh_obj)
-    file_name = "{}.txt".format(hh.id)
+    file_name = "{}/{}.txt".format(user,hh.id)
 
     file = default_storage.open(file_name, 'w')
     file.write(json_text)

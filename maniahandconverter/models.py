@@ -1,11 +1,13 @@
 from django.db import models
 from mhc.storage_backend import JsonStorage, ConvertedStorage
+from django.contrib.auth.models import User
 
 class HHManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(active=True)
 
 class HH(models.Model):
+    user         = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     name         = models.CharField(max_length=120, null=True, blank=True)
     file_type    = models.CharField(max_length=120, null=True, blank=True)
     path         = models.CharField(max_length=127, blank=True, null=True)
