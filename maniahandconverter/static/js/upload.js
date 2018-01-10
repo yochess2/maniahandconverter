@@ -4,16 +4,6 @@
 //   2. the file is then uploaded to s3 from the frontend
 //   3. another request is made to the backend to create a HH Object
 $(function() {
-  $(".js-upload-hhs").click(function (evt) {
-    evt.preventDefault();
-    $("#fileupload").click();
-  });
-
-  $('#fileupload').fileupload({
-    dataType: 'json',
-    add: add,
-  });
-
   var format_size = function(file_size) {
     var size = parseInt(file_size/1000)
     var color = file_size > 999000 ? 'red' : 'green';
@@ -40,6 +30,22 @@ $(function() {
     }
   }
 
+  $(".js-upload-hhs").click(function (evt) {
+    evt.preventDefault();
+    $("#fileupload").click();
+  });
+
+  $('#fileupload').fileupload({
+    dataType: 'xml',
+    url: 'https://handconverter-static.s3.amazonaws.com',
+    paramName: 'file',
+    add: add,
+    done: function(e, data) {
+      data.context.convertWrapperElem.children().html('Creating Object... 3/4');
+      take_care_of_rest(data.context.s3Data, data.context.hh_id, data.context.convertWrapperElem, data.context.outerElem);
+    }
+  });
+
   function add(e, data) {
     var filename            =   data.files[0].name;
     var file_size           =   data.files[0].size;
@@ -62,7 +68,7 @@ $(function() {
                                     evt.preventDefault();
                                     file = data.files[0];
                                     convertElem.replaceWith('<p>Getting Signature... 1/4</p>');
-                                    getSignedRequest(file, convertWrapperElem, outerElem);
+                                    getSignedRequest(file, convertWrapperElem, outerElem, data);
                                   });
 
     var convertWrapperElem  =   $('<div/>')
@@ -77,9 +83,15 @@ $(function() {
                                   .append(fileWrapperElem)
                                   .append(convertWrapperElem)
 
+    data.context = {
+      outerElem: outerElem,
+      convertWrapperElem: convertWrapperElem
+    };
+
   }
 
-  function getSignedRequest(file, convertWrapperElem, outerElem){
+  // Step 1/5
+  function getSignedRequest(file, convertWrapperElem, outerElem, data){
     var xhr = new XMLHttpRequest();
     xhr.open("GET", "/sign_s3?file_name="+file.name+"&file_type="+file.type+"&file_size="+file.size);
 
@@ -89,7 +101,7 @@ $(function() {
           var response = JSON.parse(xhr.responseText);
           if (response.is_valid) {
             convertWrapperElem.children().html('Uploading File... 2/4');
-            uploadFile(file, response.data, response.url, response.hh_id, convertWrapperElem, outerElem);
+            uploadFile(file, response.data, response.url, response.hh_id, convertWrapperElem, outerElem, data);
           } else {
             convertWrapperElem.children().html(response.message);
           }
@@ -102,114 +114,126 @@ $(function() {
     xhr.send();
   }
 
-  function uploadFile(file, s3Data, url, hh_id, convertWrapperElem, outerElem){
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", s3Data.url);
-    var postData = new FormData();
-    for(key in s3Data.fields){
-      postData.append(key, s3Data.fields[key]);
-    }
-    postData.append('file', file);
-    xhr.send(postData);
-    xhr.onreadystatechange = function() {
-      if(xhr.readyState === 4){
-        if(xhr.status === 200 || xhr.status === 204){
-          convertWrapperElem.children().html('Creating Object... 3/4');
-          var csrf_token = $('meta[name="csrf-token"]').attr('content');
+  // Step 2/5 (either xhr manually, or blueimp's fileupload)
+  function uploadFile(file, s3Data, url, hh_id, convertWrapperElem, outerElem, data){
+    data.formData = s3Data.fields;
+    data.context.s3Data = {
+      fields: s3Data.fields
+    };
+    data.context.hh_id = hh_id
+    data.submit()
+    // var xhr = new XMLHttpRequest();
+    // xhr.open("POST", s3Data.url, true);
+    // var postData = new FormData();
+    // for(key in s3Data.fields){
+    //   postData.append(key, s3Data.fields[key]);
+    // }
+    // postData.append('file', file);
+    // xhr.onreadystatechange = function() {
+    //   if(xhr.readyState === 4){
+    //     if(xhr.status === 200 || xhr.status === 204){
+    //       convertWrapperElem.children().html('Creating Object... 3/4');
+    //       take_care_of_rest(s3Data, hh_id, convertWrapperElem, outerElem)
+    //     }
+    //     else{
+    //       convertWrapperElem.children().html('Could not upload file.');
+    //     }
+    //  }
+    // };
+    // xhr.send(postData);
+  }
+
+  // Step (3 to 5)/5
+  function take_care_of_rest(s3Data, hh_id, convertWrapperElem, outerElem) {
+    var csrf_token = $('meta[name="csrf-token"]').attr('content');
+    $.ajax({
+      type: 'POST',
+      url: window.location.href,
+      data: {
+        csrfmiddlewaretoken: csrf_token,
+        hh_id: hh_id,
+        key: s3Data.fields.key,
+        type: 'sync1'
+      },
+      success: function(data) {
+        if (data.is_valid) {
+          convertWrapperElem.children().html('Creating Models... 4/4')
           $.ajax({
             type: 'POST',
             url: window.location.href,
             data: {
               csrfmiddlewaretoken: csrf_token,
-              hh_id: hh_id,
-              key: s3Data.fields.key,
-              type: 'sync1'
+              hh_json_id: data.hh_json_id,
+              type: 'sync2'
             },
-            success: function(data) {
-              if (data.is_valid) {
-                convertWrapperElem.children().html('Creating Models... 4/4')
-                $.ajax({
-                  type: 'POST',
-                  url: window.location.href,
-                  data: {
-                    csrfmiddlewaretoken: csrf_token,
-                    hh_json_id: data.hh_json_id,
-                    type: 'sync2'
-                  },
-                  success: function(data_2) {
-                    if (data_2.is_valid) {
-                      convertWrapperElem.children().html('Done!')
+            success: function(data_2) {
+              if (data_2.is_valid) {
+                convertWrapperElem.children().html('Done!')
 
-                      var formWrapperElem = $('<div/>');
-                      var newSelectElem = $('<select/>').addClass('new-select-button');
-                      var newButtonElem = $('<input type="submit"/>');
+                var formWrapperElem = $('<div/>');
+                var newSelectElem = $('<select/>').addClass('new-select-button');
+                var newButtonElem = $('<input type="submit"/>');
 
-                      formWrapperElem
-                        .addClass('col-sm-4')
-                        .addClass('new-form-wrapper')
-                        .append(newSelectElem)
-                        .append(newButtonElem);
+                formWrapperElem
+                  .addClass('col-sm-4')
+                  .addClass('new-form-wrapper')
+                  .append(newSelectElem)
+                  .append(newButtonElem);
 
-                      $.each(data_2.players, function(key, value) {
-                        newSelectElem
-                          .append($("<option></option>")
-                          .attr("value",key)
-                          .text(key + ': ' + value['count']));
-                      });
+                $.each(data_2.players, function(key, value) {
+                  newSelectElem
+                    .append($("<option></option>")
+                    .attr("value",key)
+                    .text(key + ': ' + value['count']));
+                });
 
-                      outerElem.append(formWrapperElem);
+                outerElem.append(formWrapperElem);
 
-                      newButtonElem
-                        .addClass('new-convert-button')
-                        .val('Convert')
+                newButtonElem
+                  .addClass('new-convert-button')
+                  .val('Convert')
 
-                      newButtonElem.click(function(evt) {
-                        evt.preventDefault();
-                        var parentElem = convertWrapperElem.parent()
-                        formWrapperElem.html('<p>Converting...</p>');
-                        $.ajax({
-                          type: 'POST',
-                          url: window.location.href,
-                          data: {
-                            csrfmiddlewaretoken: csrf_token,
-                            hero: newSelectElem.val(),
-                            hh_json_id: data.hh_json_id,
-                            type: 'convert'
-                          },
-                          success: function(data_3) {
-                            if (data_3.is_valid) {
-                              parentElem
-                                .find('.new-form-wrapper')
-                                .html('<p><a target="_blank" href="/new/'+data_3.new_hh_id+'">'+data_3.hero+'</a></p>')
-                            }
-                          },
-                          error: function(err) {
-                            parentElem
-                              .find('.new-form-wrapper')
-                              .html('<p>Error Converting File</p>')
-                          },
-                          dataType: 'json'
-                        })
-                      });
-                    }
-                  },
-                  error: function(err) {
-                    convertWrapperElem.children().html('Error Creating Models...')
-                  },
-                  dataType: 'json'
+                newButtonElem.click(function(evt) {
+                  evt.preventDefault();
+                  var parentElem = convertWrapperElem.parent()
+                  formWrapperElem.html('<p>Converting...</p>');
+                  $.ajax({
+                    type: 'POST',
+                    url: window.location.href,
+                    data: {
+                      csrfmiddlewaretoken: csrf_token,
+                      hero: newSelectElem.val(),
+                      hh_json_id: data.hh_json_id,
+                      type: 'convert'
+                    },
+                    success: function(data_3) {
+                      if (data_3.is_valid) {
+                        parentElem
+                          .find('.new-form-wrapper')
+                          .html('<p><a target="_blank" href="/new/'+data_3.new_hh_id+'">'+data_3.hero+'</a></p>')
+                      }
+                    },
+                    error: function(err) {
+                      parentElem
+                        .find('.new-form-wrapper')
+                        .html('<p>Error Converting File</p>')
+                    },
+                    dataType: 'json'
+                  })
                 });
               }
             },
             error: function(err) {
-              convertWrapperElem.children().html('Error Creating Objects...')
+              convertWrapperElem.children().html('Error Creating Models...')
             },
             dataType: 'json'
           });
         }
-        else{
-          convertWrapperElem.children().html('Could not upload file.');
-        }
-     }
-    };
+      },
+      error: function(err) {
+        convertWrapperElem.children().html('Error Creating Objects...')
+      },
+      dataType: 'json'
+    });
   }
 });
