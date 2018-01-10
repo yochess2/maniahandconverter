@@ -29,6 +29,9 @@ class HHJson(models.Model):
     class Meta:
         ordering = ["-uploaded_at"]
 
+    def __str__(self):
+        return self.file.name
+
 class Player(models.Model):
     name        = models.CharField(max_length=63)
 
@@ -50,3 +53,8 @@ class HHNew(models.Model):
     hh_json     = models.ForeignKey('HHJson', null=True, on_delete=models.SET_NULL)
     file        = models.FileField(storage=ConvertedStorage())
     hero        = models.CharField(max_length=63)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+
+    def __str__(self):
+        return self.file.name
