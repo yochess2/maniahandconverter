@@ -28,12 +28,11 @@ DEBUG = bool(os.environ.get('DJANGO_DEBUG'))
 ALLOWED_HOSTS = ['shielded-basin-59122.herokuapp.com', 'localhost', '127.0.0.1']
 
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST = os.environ.get('EMAIL_HOST')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'testsite_app'
-EMAIL_HOST_PASSWORD = 'mys3cr3tp4ssw0rd'
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'ManiaHandConverter Team <noreply@example.com>'
 
 # Application definition
 
