@@ -25,8 +25,9 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get('DJANGO_DEBUG'))
 
-ALLOWED_HOSTS = ['shielded-basin-59122.herokuapp.com', 'localhost']
+ALLOWED_HOSTS = ['shielded-basin-59122.herokuapp.com', 'localhost', '127.0.0.1']
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Application definition
 
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'maniahandconverter.apps.ManiahandconverterConfig',
+    'user.apps.UserConfig',
     'storages',
 ]
 
@@ -57,7 +59,7 @@ ROOT_URLCONF = 'mhc.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['./templates',],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
