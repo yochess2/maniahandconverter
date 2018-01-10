@@ -6,7 +6,7 @@
 $(function() {
   var format_size = function(file_size) {
     var size = parseInt(file_size/1000)
-    var color = file_size > 999000 ? 'red' : 'green';
+    var color = file_size > 1999000 ? 'red' : 'green';
 
     return "<b>size:</b> <span style='color:"+color+"'>"+size +" kb</span>";
   }
