@@ -14,7 +14,7 @@ from .models import (
     HHNew
 )
 
-import json, boto3, uuid
+import json, boto3, uuid, magic
 
 HH_LOCATION = settings.AWS_HH_LOCATION
 S3_BUCKET = settings.AWS_STORAGE_BUCKET_NAME
@@ -89,6 +89,10 @@ def handle_create_hh_json(hh_id, key, user):
 
     hh      = update_hh_model(hh_id, user)
     hh_text = get_hh_text_from_s3(key)
+
+    if hh_text == '':
+        return {'is_valid':False, 'message': 'You trying to hack me?'}
+
     hh_obj  = hh_to_object.init(hh_text)
     hh_json = create_hh_json_model(hh_obj, hh, user)
     return {
@@ -140,7 +144,12 @@ def create_s3_signature(hh_path, file_type):
 def get_hh_text_from_s3(key):
     s3 = boto3.resource('s3')
     hh_s3 = s3.Object(S3_BUCKET, key)
-    hh_text = hh_s3.get()['Body'].read().decode('utf-8')
+    text = hh_s3.get()['Body'].read()
+
+    if magic.from_buffer(text,mime=True) != 'text/plain':
+        return ''
+
+    hh_text = text.decode('utf-8')
     return hh_text
 
 ################################
