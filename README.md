@@ -29,8 +29,10 @@ https://shielded-basin-59122.herokuapp.com/
 - [x] deployed (to heroku)
 
 Todos:
+- [ ] license page of some sort
 - [ ] slug configuration for item IDs
 - [ ] profile page
+- [ ] security such as captcha to prevent brute forcing robots
 - [ ] limit every user to 10000 hands
 - [ ] styling
 
