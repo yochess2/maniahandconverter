@@ -31,6 +31,7 @@ https://shielded-basin-59122.herokuapp.com/
 Todos:
 - [ ] slug configuration for item IDs
 - [ ] profile page
+- [ ] captcha and extra security measurs against bruce forcing robots
 - [ ] limit every user to 10000 hands
 - [ ] styling
 
