@@ -40,4 +40,4 @@ Nice to haves:
 - [ ] expanded database design (hand models instead of json object substitutes)
 
 ## Database Design
-![alt text](https:/shielded-basin-59122.herokuapp.com/static/images/current_schema.png)
+![alt text](https://shielded-basin-59122.herokuapp.com/static/images/current_schema.png)
