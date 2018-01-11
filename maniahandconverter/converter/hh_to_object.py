@@ -80,6 +80,13 @@ def create_hand(old_lines, old_hand_text, body):
         object_hand['details']['ante'] = game_and_stake.group(6) or '0'
         return True
 
+    def verify_mania(object_hand, line, regex):
+        site = re.search(regex, line)
+        if bool(site) == False:
+            object_hand['error']['value'] = True
+            object_hand['error']['message'] = 'Invalid Line 3'
+        return True
+
     def get_table(object_hand, line, regex):
         table = re.search(regex, line)
         if bool(table) == False:
@@ -160,21 +167,29 @@ def create_hand(old_lines, old_hand_text, body):
         'rake_and_pot': r'^Rake \((\d+\.?\d*)\) Pot \((\d+\.?\d*)\)',
         'player_seating': r'^Seat (\d): (.*) \((\d+\.?\d*)\)( - sitting out)?',
         'player_result': r'^Seat \d+: (.*) \(([+|-]\d+\.?\d*)\) \[(.*)\] (.*)',
-        'side_pot': r'^(.*) (wins|splits) (Hi |Lo )?Side Pot \d (.*)'
+        'side_pot': r'^(.*) (wins|splits) (Hi |Lo )?Side Pot \d (.*)',
+        'site': r'Site: Poker Mania'
     }
 
+    if len(old_lines) < 4:
+        object_hand['error']['value'] = True
+        object_hand['error']['message'] = 'Improper Heading'
+        return object_hand
+
     if bool(get_hand_and_date(object_hand, old_lines[0], re_lines['hand_and_date'])) == False:
-      return object_hand
+        return object_hand
     if bool(get_game_and_stake(object_hand, old_lines[1], re_lines['game_and_stake'])) == False:
-      return object_hand
+        return object_hand
+    if bool(verify_mania(object_hand, old_lines[2], re_lines['site'])) == False:
+        return object_hand
     if bool(get_table(object_hand, old_lines[3], re_lines['table'])) == False:
-      return object_hand
+        return object_hand
     if bool(is_not_cancelled(object_hand, old_lines[4], re_lines['cancelled'])) == False:
-      return object_hand
+        return object_hand
     if bool(get_rake_and_pot(object_hand, old_hand_text, re_lines['rake_and_pot'])) == False:
-      return object_hand
+        return object_hand
     if bool(get_players(object_hand, old_hand_text, re_lines['player_seating'], re_lines['player_result'])) == False:
-      return object_hand
+        return object_hand
 
     # keep track of side pots
     side_pot = re.search(re_lines['side_pot'], old_hand_text, re.M)
