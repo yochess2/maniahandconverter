@@ -32,6 +32,8 @@ Todos:
 - [ ] slug configuration for item IDs
 - [ ] profile page
 - [ ] limit every user to 10000 hands
+- [ ] captcha to registration/login
+- [ ] extra login security
 - [ ] styling
 
 Nice to haves:
