@@ -45,4 +45,4 @@ Nice to haves:
 ![alt text](https://shielded-basin-59122.herokuapp.com/static/images/current_schema.png)
 
 ## Sample Walkthrough
-<img src='shielded-basin-59122.herokuapp.com/static/images/maniahandconverter.gif.gif' title='Video Walkthrough' width='' alt='Video Walkthrough' />
+<img src='shielded-basin-59122.herokuapp.com/static/images/maniahandconverter.gif' title='Video Walkthrough' width='' alt='Video Walkthrough' />
