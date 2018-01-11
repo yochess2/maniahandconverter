@@ -12,7 +12,7 @@ This is a website used to convert poker mania hand histories into pokerstars han
   - AWS S3
   
 ## Check out the site: 
-https://shielded-basin-59122.herokuapp.com/maniahandconverter/
+https://shielded-basin-59122.herokuapp.com/
   
 ## What's done:
 - [x] hand history converter
