@@ -168,7 +168,7 @@ def create_hand(old_lines, old_hand_text, body):
         'player_seating': r'^Seat (\d): (.*) \((\d+\.?\d*)\)( - sitting out)?',
         'player_result': r'^Seat \d+: (.*) \(([+|-]\d+\.?\d*)\) \[(.*)\] (.*)',
         'side_pot': r'^(.*) (wins|splits) (Hi |Lo )?Side Pot \d (.*)',
-        'site': r'Site: Poker Mania'
+        'site': r'Site: (.*)'
     }
 
     if len(old_lines) < 4:
