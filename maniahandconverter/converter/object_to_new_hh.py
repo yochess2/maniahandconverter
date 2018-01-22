@@ -134,7 +134,7 @@ def get_heading_lines(hand_details, button, game):
 def get_seating_lines(players):
     result = []
     three = "Seat {}: {} (${:.2f} in chips)"
-    for name in players:
+    for name, value in players.items():
         if players[name]['is_sitting'] == True:
             continue
         result.append(three.format(
@@ -304,7 +304,7 @@ def get_board_line(board):
 
 def get_result_lines(players):
     results = []
-    for name in players:
+    for name, value in players.items():
         player = players[name]
         if player['is_sitting']:
             continue
