@@ -1,0 +1,29 @@
+### HandHistory
+
+| Endpoint        | Action | Returns                             | Side Effect                                | Parameters/Req Body                  |
+|-----------------|--------|-------------------------------------|--------------------------------------------|--------------------------------------|
+|/api/hh          | GET    | HandHistory List                    | -                                          | -                                    |
+|/api/hh          | POST   | HandHistory                         | -                                          | -                                    |
+|/api/hh/:id      | PUT    | -                                   | uploaded is set to true, uneditable        | -                                    |
+|/api/hh/:id      | DELETE | Success Message                     | Sets all Related Keys to Null              | -                                    |
+
+
+### HandHistoryObject
+
+| Endpoint        | Action | Returns                             | Side Effect                                | Parameters/Req Body                  |
+|-----------------|--------|-------------------------------------|--------------------------------------------|--------------------------------------|
+|/api/hhobj       | GET    | HandHistoryObject List              | -                                          | -                                    |
+|/api/hhobj       | POST   | Players                             | -                                          | -                                    |
+|/api/hhobj/:id   | GET    | Parsed HandHistoryObject            | -                                          | -                                    |
+
+
+### New Hand History
+
+| Endpoint        | Action | Returns                             | Side Effect                                | Parameters/Req Body                  |
+|-----------------|--------|-------------------------------------|--------------------------------------------|--------------------------------------|
+|/api/newhh       | POST   | -                                   | -                                          | -                                    |
+|/api/newhh/:id   | GET    | New Hand History Text               | -                                          | -                                    |
+
+
+post to api/hh, => if valid, 
+get to api/s3, => client upload

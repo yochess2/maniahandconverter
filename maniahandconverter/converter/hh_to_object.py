@@ -148,7 +148,7 @@ def create_hand(old_lines, old_hand_text, body):
             players[p_tuple[0]]['summary'] = p_tuple[3]
         object_hand['details']['sitting'] = 0
         object_hand['details']['dealt'] = 0
-        for player in players:
+        for player, value in players.items():
             if players[player]['is_sitting'] == True:
                 object_hand['details']['sitting'] += 1
                 players[player]['result'] = 0
@@ -213,7 +213,7 @@ def get_stats(hh_obj, details):
     if details['game'] not in games:
         games[details['game']] = True
 
-    for player in details['players']:
+    for player, value in details['players'].items():
         game = details['game']
         result = float(details['players'][player]['result'])
 
