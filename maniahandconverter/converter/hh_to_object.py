@@ -114,6 +114,7 @@ def create_hand(old_lines, old_hand_text, body):
         object_hand['details']['pot'] = rake.group(2)
         return True
 
+    # 'player_result': r'^Seat \d+: (.*) \(([+|-]\d+\.?\d*)\) \[(.*)\] (.*)',
     def get_players(object_hand, old_hand_text, re_seating, re_result):
         seatings = re.findall(re_seating, old_hand_text, flags=re.M)
         results = re.findall(re_result, old_hand_text, flags=re.M)
@@ -144,6 +145,7 @@ def create_hand(old_lines, old_hand_text, body):
                 return False
             players[p_tuple[0]]['result'] = p_tuple[1]
             players[p_tuple[0]]['hole'] = p_tuple[2]
+            players[p_tuple[0]]['summary'] = p_tuple[3]
         object_hand['details']['sitting'] = 0
         object_hand['details']['dealt'] = 0
         for player in players:
@@ -168,7 +170,8 @@ def create_hand(old_lines, old_hand_text, body):
         'player_seating': r'^Seat (\d): (.*) \((\d+\.?\d*)\)( - sitting out)?',
         'player_result': r'^Seat \d+: (.*) \(([+|-]\d+\.?\d*)\) \[(.*)\] (.*)',
         'side_pot': r'^(.*) (wins|splits) (Hi |Lo )?Side Pot \d (.*)',
-        'site': r'Site: (.*)'
+        'site': r'Site: (.*)',
+        'board': r'Board: \[(.*)\], Players: .*',
     }
 
     if len(old_lines) < 4:
@@ -197,6 +200,10 @@ def create_hand(old_lines, old_hand_text, body):
     # body starts from dealer button or posts
     lines_to_skip = 4 + int(object_hand['details']['dealt']) + int(object_hand['details']['sitting'])
     object_hand['details']['body'] = '\n'.join(body[lines_to_skip:])
+
+    # for hem
+    object_hand['details']['board'] = re.findall(re_lines['board'], old_hand_text, flags=re.M)
+
     return object_hand
 
 def get_stats(hh_obj, details):

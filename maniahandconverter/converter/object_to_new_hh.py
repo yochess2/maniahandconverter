@@ -84,6 +84,8 @@ def create_hand(heroname, hand_details):
         hole_lines, body_index = get_hole_lines(heroname, holecard, body_index)
         body_lines, body_index = get_body_lines(body, body_index, bb)
         summary_line = get_summary_line(body[-1])
+        board_line = get_board_line(hand_details['board'])
+        result_lines = get_result_lines(hand_details['players'])
 
         converted_hand['lines'] =   heading_lines + \
                                     seating_lines + \
@@ -91,7 +93,9 @@ def create_hand(heroname, hand_details):
                                     blind_lines   + \
                                     hole_lines    + \
                                     body_lines    + \
-                                    summary_line
+                                    summary_line  + \
+                                    board_line    + \
+                                    result_lines
 
     return converted_hand
 
@@ -291,3 +295,30 @@ def get_summary_line(line):
         result.append("Total pot ${} | Rake ${}".format(r.group(2), r.group(1)))
 
     return result
+
+def get_board_line(board):
+    b = ''.join(board)
+    result = []
+    result.append("Board [{}]".format(b))
+    return result
+
+def get_result_lines(players):
+    results = []
+    for name in players:
+        player = players[name]
+        if player['is_sitting']:
+            continue
+        if re.match(r'Folded on PreFlop', player['summary'].strip()):
+            results.append("Seat {}: {} folded before Flop".format(player['seat'], name))
+
+        elif re.match(r'Folded on Flop', player['summary'].strip()):
+            results.append("Seat {}: {} folded on the Flop".format(player['seat'], name))
+
+        elif re.match(r'Folded on Turn', player['summary'].strip()):
+            results.append("Seat {}: {} folded on the Turn".format(player['seat'], name))
+
+        elif re.match(r'Folded on River', player['summary'].strip()):
+            results.append("Seat {}: {} folded on River".format(player['seat'], name))
+        else:
+            results.append("Seat {}: {} showed [{}] and {}".format(player['seat'], name, player['hole'], player['summary'].strip()))
+    return results
