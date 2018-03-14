@@ -119,7 +119,7 @@ def get_heading_lines(hand_details, button, game):
     result = []
     one = "PokerStars Hand #{}: {} ({}) - {}"
     result.append(one.format(
-        hand_details['hand_number'],
+        hand_details['hand_number'].replace('-', ''),
         game,
         add_dollars(hand_details['sb'], hand_details['bb']),
         convert_date(hand_details['date'], hand_details['time'])

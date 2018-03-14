@@ -3,9 +3,10 @@
 | Endpoint        | Action | Returns                             | Side Effect                                | Parameters/Req Body                  |
 |-----------------|--------|-------------------------------------|--------------------------------------------|--------------------------------------|
 |/api/hh          | GET    | HandHistory List                    | -                                          | -                                    |
-|/api/hh          | POST   | HandHistory                         | -                                          | -                                    |
-|/api/hh/:id      | PUT    | -                                   | uploaded is set to true, uneditable        | -                                    |
-|/api/hh/:id      | DELETE | Success Message                     | Sets all Related Keys to Null              | -                                    |
+|/api/hh          | POST   | s3sig                               | -                                          | file_name, user                      |
+|/api/hh/:id      | GET    | HandHistory                         | -                                          | -                                    |
+|/api/hh/:id      | PUT    | -                                   | uploaded=true                              | -                                    |
+|/api/hh/:id      | DELETE | -                                   | Sets all Related Keys to Null              | -                                    |
 
 
 ### HandHistoryObject
@@ -13,8 +14,9 @@
 | Endpoint        | Action | Returns                             | Side Effect                                | Parameters/Req Body                  |
 |-----------------|--------|-------------------------------------|--------------------------------------------|--------------------------------------|
 |/api/hhobj       | GET    | HandHistoryObject List              | -                                          | -                                    |
-|/api/hhobj       | POST   | Players                             | -                                          | -                                    |
-|/api/hhobj/:id   | GET    | Parsed HandHistoryObject            | -                                          | -                                    |
+|/api/hhobj       | POST   | hhObject, s3sig                     | -                                          | hh_id                                |
+|/api/hhobj/:id   | GET    | HandHistoryObject                   | -                                          | -                                    |
+|/api/hhobj/:id   | PUT    | -                                   | uploaded=true                              | -                                    |
 
 
 ### New Hand History
