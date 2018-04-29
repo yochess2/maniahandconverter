@@ -87,15 +87,25 @@ def create_hand(heroname, hand_details):
         board_line = get_board_line(hand_details['board'])
         result_lines = get_result_lines(hand_details['players'])
 
-        converted_hand['lines'] =   heading_lines + \
-                                    seating_lines + \
-                                    ante_lines    + \
-                                    blind_lines   + \
-                                    hole_lines    + \
-                                    body_lines    + \
-                                    summary_line  + \
-                                    board_line    + \
-                                    result_lines
+
+        if hand_details['no_summary']:
+            converted_hand['lines'] =   heading_lines + \
+                                        seating_lines + \
+                                        ante_lines    + \
+                                        blind_lines   + \
+                                        hole_lines    + \
+                                        body_lines    + \
+                                        summary_line
+        else:
+            converted_hand['lines'] =   heading_lines + \
+                                        seating_lines + \
+                                        ante_lines    + \
+                                        blind_lines   + \
+                                        hole_lines    + \
+                                        body_lines    + \
+                                        summary_line  + \
+                                        board_line    + \
+                                        result_lines
 
     return converted_hand
 

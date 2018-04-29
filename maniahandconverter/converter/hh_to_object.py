@@ -115,21 +115,59 @@ def create_hand(old_lines, old_hand_text, body):
         return True
 
     # 'player_result': r'^Seat \d+: (.*) \(([+|-]\d+\.?\d*)\) \[(.*)\] (.*)',
-    def get_players(object_hand, old_hand_text, re_seating, re_result):
+    def get_players(object_hand, old_hand_text, re_seating, re_result, re_dealt, re_winner):
         seatings = re.findall(re_seating, old_hand_text, flags=re.M)
         results = re.findall(re_result, old_hand_text, flags=re.M)
+        dealt = re.findall(re_dealt, old_hand_text, flags=re.M)
+        winner = re.findall(re_winner, old_hand_text, flags=re.M)
+
         if bool(seatings) == False:
             object_hand['error']['value'] = True
             object_hand['error']['message'] = 'Invalid Player Seatings'
             return False
         if bool(results) == False:
-            object_hand['error']['value'] = True
-            object_hand['error']['message'] = 'Invalid Player Results'
-            return False
+            # object_hand['error']['value'] = True
+            # object_hand['error']['message'] = 'Invalid Player Results'
+            # return False
+
+
+
+            players = {}
+            for p_tuple in seatings:
+                players[p_tuple[1]] = {
+                    'seat': p_tuple[0],
+                    'name': p_tuple[1],
+                    'starting': p_tuple[2],
+                    'is_sitting': p_tuple[3] != ''
+                }
+                players[p_tuple[1]]['result'] = 0
+                if dealt[0][0] == p_tuple[1]:
+                    players[p_tuple[1]]['hole'] = dealt[0][1]
+                    players[p_tuple[1]]['summary'] = 'Nada'
+                else:
+                    players[p_tuple[1]]['hole'] = 'Nada'
+                    players[p_tuple[1]]['summary'] = 'Nada'
+
+            object_hand['details']['sitting'] = 0
+            object_hand['details']['dealt'] = 0
+            for player, value in players.items():
+                if players[player]['is_sitting'] == True:
+                    object_hand['details']['sitting'] += 1
+                    players[player]['result'] = 0
+                else:
+                    object_hand['details']['dealt'] += 1
+            object_hand['details']['players'] = players
+            object_hand['details']['no_summary'] = True
+            return True
+
+
+
         if len(list(filter(lambda p: p[3] == '', seatings))) != len(results):
             object_hand['error']['value'] = True
             object_hand['error']['message'] = 'Missing 1+ Player Summary'
             return False
+
+        object_hand['details']['no_summary'] = False
         players = {}
         for p_tuple in seatings:
             players[p_tuple[1]] = {
@@ -172,6 +210,8 @@ def create_hand(old_lines, old_hand_text, body):
         'side_pot': r'^(.*) (wins|splits) (Hi |Lo )?Side Pot \d (.*)',
         'site': r'Site: (.*)',
         'board': r'Board: \[(.*)\], Players: .*',
+        'dealt': r'Dealt to (.*) \[(.*)\]',
+        'winner_no_showdown': r'(.*) wins Pot (\(.*\))',
     }
 
     if len(old_lines) < 4:
@@ -191,12 +231,14 @@ def create_hand(old_lines, old_hand_text, body):
         return object_hand
     if bool(get_rake_and_pot(object_hand, old_hand_text, re_lines['rake_and_pot'])) == False:
         return object_hand
-    if bool(get_players(object_hand, old_hand_text, re_lines['player_seating'], re_lines['player_result'])) == False:
-        return object_hand
 
     # keep track of side pots
     side_pot = re.search(re_lines['side_pot'], old_hand_text, re.M)
     object_hand['details']['has_side'] = bool(side_pot)
+
+    if bool(get_players(object_hand, old_hand_text, re_lines['player_seating'], re_lines['player_result'], re_lines['dealt'], re_lines['winner_no_showdown'])) == False:
+        return object_hand
+
     # body starts from dealer button or posts
     lines_to_skip = 4 + int(object_hand['details']['dealt']) + int(object_hand['details']['sitting'])
     object_hand['details']['body'] = '\n'.join(body[lines_to_skip:])
