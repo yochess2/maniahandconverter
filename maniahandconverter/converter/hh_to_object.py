@@ -121,6 +121,11 @@ def create_hand(old_lines, old_hand_text, body):
         dealt = re.findall(re_dealt, old_hand_text, flags=re.M)
         winner = re.findall(re_winner, old_hand_text, flags=re.M)
 
+        if bool(dealt) == False:
+            object_hand['error']['value'] = True
+            object_hand['error']['message'] = 'Not dealt in'
+            return False
+
         if bool(seatings) == False:
             object_hand['error']['value'] = True
             object_hand['error']['message'] = 'Invalid Player Seatings'
