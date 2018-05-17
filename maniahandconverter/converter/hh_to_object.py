@@ -121,7 +121,7 @@ def create_hand(old_lines, old_hand_text, body):
         dealt = re.findall(re_dealt, old_hand_text, flags=re.M)
         winner = re.findall(re_winner, old_hand_text, flags=re.M)
 
-        if bool(dealt) == False:
+        if bool(dealt) == False and bool(results) == False:
             object_hand['error']['value'] = True
             object_hand['error']['message'] = 'Not dealt in'
             return False

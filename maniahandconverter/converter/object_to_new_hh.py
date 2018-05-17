@@ -181,7 +181,12 @@ def get_blind_lines(body, body_index, hand_details):
     five = "{}: posts {} blind ${:.2f}"
     hole_rx = r'^\*\* Hole Cards \*\* \[\d players\]'
     sb_bb_rx = r'(.*) posts (small \& big blind) (.*)'
+
     for line in body[body_index:]:
+        # not sure how to handle straddle for now
+        if re.search(r'.* posts straddle .*', line):
+            index+=1
+            continue
         if bool(re.search(hole_rx, line)):
             break
         elif bool(re.search(sb_bb_rx, line)):
