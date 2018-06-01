@@ -324,16 +324,16 @@ def get_result_lines(players):
         if player['is_sitting']:
             continue
         if re.match(r'Folded on PreFlop', player['summary'].strip()):
-            results.append("Seat {}: {} folded before Flop".format(player['seat'], name))
+            results.append("Seat {}: {} folded [{}] before Flop".format(player['seat'], name, player['hole']))
 
         elif re.match(r'Folded on Flop', player['summary'].strip()):
-            results.append("Seat {}: {} folded on the Flop".format(player['seat'], name))
+            results.append("Seat {}: {} folded [{}] on the Flop".format(player['seat'], name, player['hole']))
 
         elif re.match(r'Folded on Turn', player['summary'].strip()):
-            results.append("Seat {}: {} folded on the Turn".format(player['seat'], name))
+            results.append("Seat {}: {} folded [{}] on the Turn".format(player['seat'], name, player['hole']))
 
         elif re.match(r'Folded on River', player['summary'].strip()):
-            results.append("Seat {}: {} folded on River".format(player['seat'], name))
+            results.append("Seat {}: {} folded [{}] on River".format(player['seat'], name, player['hole']))
         else:
             results.append("Seat {}: {} showed [{}] and {}".format(player['seat'], name, player['hole'], player['summary'].strip()))
     return results
