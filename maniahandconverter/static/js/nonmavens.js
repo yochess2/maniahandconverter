@@ -123,10 +123,10 @@ $(function() {
     var re_collected_line = /(\S+) collected \[ \$(.+) \]/;
     var re_showdown = /(\S+) (did not show his hand|shows|mucks)( \[ (.+), (.+) \])?/;
 
-    var hands = text.split(/\n\n/).filter(function(str) {
-      return str !== ''
+    var hands = text.replace(/\r/g, '').split('\n\n').filter(function(str) {
+      return str !== '' && str !== '\n';
     });
-
+console.log(hands.length)
     hands.forEach(function(hand, index) {
       var result = [];
       var lines = hand.split('\n').filter(function(line) {
