@@ -68,7 +68,7 @@ $(function() {
                                   });
 
     var nameElem = $('<input/>')
-                      .attr('placeholder', 123456789);
+                      .attr('placeholder', 'Enter Tourney ID in #s');
 
     var nameWrapperElem = $('<div/>')
                             .addClass('col-sm-2')
@@ -152,7 +152,7 @@ console.log(hands.length)
 // indent here for testing
       var heading1 = `PokerStars Hand #${game_num_details[1]}: Tournament #${tournament_id}, $50+5 USD `;
       heading1 += `Hold'em No Limit - Level I (${small_blind}/${big_blind_details[2]})`;
-      heading1 += ' - 2018/10/02 12:00:00 ET';
+      heading1 += ` - 2018/10/02 ${generate_time(index)} ET`;
       var heading2 = `Table '${tournament_id} 1' Seat #${button_num_details[1]} is the button`;
       // var heading1 = `PokerStars Hand #${game_num_details[1]}: Hold'em No Limit ($${small_blind}/$${big_blind_details[2]} USD)`;
       // heading1 += ' - 2018/10/02 12:00:00 ET';
@@ -329,6 +329,24 @@ console.log(hands.length)
       });
       OpenWindow.document.write(`</pre>`);
     });
+  }
+
+  function generate_time(index) {
+    var minute = parseInt(index / 60);
+    var ss = index % 60;
+    var mm = minute % 60;
+    var hh = parseInt(minute / 60) + 12;
+
+    if (ss < 10) {
+      ss = '0' + ss;
+    }
+    if (mm < 10) {
+      mm = '0' + mm;
+    }
+    if (hh < 10) {
+      hh = '0' + hh;
+    }
+    return `${hh}:${mm}:${ss}`;
   }
 
   function action(re_action, lines, current_sizing, current_index, small_blind_details, big_blind_details) {
