@@ -149,7 +149,7 @@ def get_hh_text_from_s3(key):
     if magic.from_buffer(text,mime=True) != 'text/plain':
         return ''
 
-    hh_text = text.decode('utf-8')
+    hh_text = text.decode('utf-8', 'ignore')
     return hh_text
 
 ################################

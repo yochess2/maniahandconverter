@@ -10,4 +10,5 @@ urlpatterns = [
     url(r'^history/(?P<pk>\d+)/$', views.HistoryDetailView.as_view(), name='history-detail'),
     url(r'^upload/$', views.FileUploadView.as_view(), name='file-upload'),
     url(r'^sign_s3/$', views.sign_s3, name='sign-s3'),
+    url(r'^non_mavens_converter', views.NonMavensConverter.as_view(), name='non-mavens-converter'),
 ]

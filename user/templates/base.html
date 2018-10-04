@@ -24,6 +24,7 @@
         {% if user.is_authenticated %}
         <li><a href="{% url 'file-upload' %}">Upload HHs</a></li>
         <li><a href="{% url 'hh-list' %}">History</a></li>
+        <li><a href="{% url 'non-mavens-converter' %}">Non-Mavens Converter</a></li>
         {% else %}
         <li><a href="{% url 'login'%}">Login</a></li>
         {% endif %}

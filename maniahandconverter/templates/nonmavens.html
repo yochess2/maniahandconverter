@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}<title>Non Mavens Converter</title>{% endblock %}
+
+{% block javascript %}
+  <meta name="csrf-token" content="{{csrf_token}}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.19.2/js/vendor/jquery.ui.widget.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.19.2/js/jquery.fileupload.min.js"></script>
+  {% load static %}
+  <script src="{% static 'js/nonmavens.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<h2>Non Mavens Converter</h2>
+
+<button type="button" class="btn btn-primary js-upload-hhs">
+  <span class="glyphicon glyphicon-cloud-upload"></span>
+  <span>Select Single HH</span>
+</button>
+
+<input id="fileupload" type="file" name="file" style="display: none;">
+
+<div class="table selected-hhs-wrapper">
+  <h4>Selected Hand Histories</h4>
+  <div class="selected-hh">
+  </div>
+</div>
+{% endblock %}

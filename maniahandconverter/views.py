@@ -107,3 +107,10 @@ class FileUploadView(LoginRequiredMixin, View):
             data        = handle_create_more_new_hh(hh_json_id, hero, request.user)
 
         return JsonResponse(data)
+
+class NonMavensConverter(LoginRequiredMixin, View):
+    def get(self, request):
+        return render(self.request, 'nonmavens.html')
+
+    # def post(self, request):
+    #     return JsonResponse({})
