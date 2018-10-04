@@ -319,14 +319,16 @@ $(function() {
     });
 
     var OpenWindow = window.open('unsaved.html');
-    OpenWindow.document.write(`<pre>`);
-    results.forEach(function(lines) {
-      lines.forEach(function(line) {
-        OpenWindow.document.write(`${line}\n`);
+    $(document).ready(function() {
+      OpenWindow.document.write(`<pre>`);
+      results.forEach(function(lines) {
+        lines.forEach(function(line) {
+          OpenWindow.document.write(`${line}\n`);
+        });
+        OpenWindow.document.write(`\n`);
       });
-      OpenWindow.document.write(`\n`);
+      OpenWindow.document.write(`</pre>`);
     });
-    OpenWindow.document.write(`</pre>`);
   }
 
   function action(re_action, lines, current_sizing, current_index, small_blind_details, big_blind_details) {
